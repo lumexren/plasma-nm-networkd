@@ -31,7 +31,6 @@ Item {
         const links = root.backendData.links || [];
         for (let i = 0; i < links.length; i++) {
             const l = links[i];
-            // Sadece fiziksel ethernet, wlan veya wireguard (bridge ve loopback filtrele)
             if (l.type === "bridge" || l.name === "lo") continue;
 
             const isConn = (l.state === "routable" || l.state === "connected") && l.ipv4 && l.ipv4.length > 0;
@@ -59,7 +58,7 @@ Item {
         const wifiNets = (root.plasmoidItem && root.plasmoidItem.wifiNetworks) ? root.plasmoidItem.wifiNetworks : [];
         for (let j = 0; j < wifiNets.length; j++) {
             const w = wifiNets[j];
-            if (w.connected) continue; // Connected bolumunde zaten var
+            if (w.connected) continue;
 
             const ssid = w.ssid || i18n("Hidden Network");
             if (search && !ssid.toLowerCase().includes(search)) continue;
@@ -126,7 +125,7 @@ Item {
             onToggleWifi: enabled => {
                 const iface = (root.wifi && root.wifi.primary_interface) ? root.wifi.primary_interface : "wlan0";
                 if (root.plasmoidItem) {
-                    root.plasmoidItem.executeLinkAction(enabled ? "up" : "down", iface);
+                    root.plasmoidItem.executeLinkAction(enabled ? "connect" : "disconnect", iface);
                 }
             }
             onRefreshRequested: {
@@ -181,15 +180,21 @@ Item {
                     width: listView.width
                     itemData: modelData
 
-                    onConnectRequested: (name, password) => {
-                        if (root.plasmoidItem) root.plasmoidItem.connectWifi(name, password);
-                    }
-                    onDisconnectRequested: name => {
+                    onConnectRequested: (type, name, password) => {
                         if (root.plasmoidItem) {
-                            if (modelData.type === "wifi") {
+                            if (type === "wifi") {
+                                root.plasmoidItem.connectWifi(name, password);
+                            } else {
+                                root.plasmoidItem.executeLinkAction("connect", name);
+                            }
+                        }
+                    }
+                    onDisconnectRequested: (type, name) => {
+                        if (root.plasmoidItem) {
+                            if (type === "wifi") {
                                 root.plasmoidItem.disconnectWifi();
                             } else {
-                                root.plasmoidItem.executeLinkAction("down", name);
+                                root.plasmoidItem.executeLinkAction("disconnect", name);
                             }
                         }
                     }

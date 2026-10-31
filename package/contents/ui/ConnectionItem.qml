@@ -9,8 +9,8 @@ PlasmaExtras.ExpandableListItem {
     id: root
 
     property var itemData: ({})
-    signal connectRequested(string name, string password)
-    signal disconnectRequested(string name)
+    signal connectRequested(string type, string name, string password)
+    signal disconnectRequested(string type, string name)
     signal actionRequested(string action, string name)
 
     readonly property bool isConnected: itemData.isConnected || false
@@ -36,11 +36,16 @@ PlasmaExtras.ExpandableListItem {
         text: root.isConnected ? i18n("Disconnect") : i18n("Connect")
         onTriggered: {
             if (root.isConnected) {
-                root.disconnectRequested(root.itemData.name);
-            } else if (root.isWifi && root.isSecured) {
-                root.expand();
+                root.disconnectRequested(root.itemData.type, root.itemData.name);
+            } else if (root.isWifi) {
+                if (root.isSecured) {
+                    root.expand();
+                } else {
+                    root.connectRequested("wifi", root.itemData.title, "");
+                }
             } else {
-                root.connectRequested(root.itemData.title, "");
+                // Wired ethernet connect (bring up + DHCP renew)
+                root.connectRequested("ethernet", root.itemData.name, "");
             }
         }
     }
@@ -63,7 +68,7 @@ PlasmaExtras.ExpandableListItem {
                     echoMode: showPwdBtn.checked ? TextInput.Normal : TextInput.Password
                     onAccepted: {
                         if (text.length > 0 || !root.isSecured) {
-                            root.connectRequested(root.itemData.title, text);
+                            root.connectRequested("wifi", root.itemData.title, text);
                             root.collapse();
                         }
                     }
@@ -81,7 +86,7 @@ PlasmaExtras.ExpandableListItem {
                     icon.name: "network-connect-symbolic"
                     enabled: pwdInput.text.length >= 8 || !root.isSecured
                     onClicked: {
-                        root.connectRequested(root.itemData.title, pwdInput.text);
+                        root.connectRequested("wifi", root.itemData.title, pwdInput.text);
                         root.collapse();
                     }
                 }

@@ -10,8 +10,9 @@ import subprocess
 import shutil
 import os
 import re
+import time
 
-def run_cmd(cmd_list, timeout=6):
+def run_cmd(cmd_list, timeout=8):
     try:
         res = subprocess.run(cmd_list, capture_output=True, text=True, timeout=timeout)
         return res.returncode, res.stdout.strip(), res.stderr.strip()
@@ -25,14 +26,12 @@ def get_systemd_networkd_status():
     code_en, out_en, _ = run_cmd(["systemctl", "is-enabled", "systemd-networkd"])
     is_enabled = (out_en.strip() == "enabled")
 
-    # Genel operational state'i networkctl'den almayı dene
     overall_state = "unknown"
     if is_active:
         code_nc, out_nc, _ = run_cmd(["networkctl", "--json=short"])
         if code_nc == 0:
             try:
                 data = json.loads(out_nc)
-                # Networkd overall state or list
                 if isinstance(data, dict):
                     overall_state = data.get("OperationalState", "routable")
             except Exception:
@@ -47,13 +46,12 @@ def get_systemd_networkd_status():
 def get_links():
     links = []
     
-    # 1. systemd-networkd json'ı dene
+    # 1. systemd-networkd json
     networkd_links = {}
     code_nc, out_nc, _ = run_cmd(["networkctl", "status", "--json=short"])
     if code_nc == 0:
         try:
             nc_data = json.loads(out_nc)
-            # Eğer array veya dict ise
             entries = nc_data if isinstance(nc_data, list) else nc_data.get("Interfaces", [])
             for item in entries:
                 ifname = item.get("Name")
@@ -62,7 +60,7 @@ def get_links():
         except Exception:
             pass
 
-    # 2. ip -j addr ile donanım ve IP detaylarını al
+    # 2. ip -j addr
     code_ip, out_ip, _ = run_cmd(["ip", "-j", "addr"])
     ip_links = []
     if code_ip == 0:
@@ -71,7 +69,7 @@ def get_links():
         except Exception:
             ip_links = []
 
-    # 3. Default gateway'i bul
+    # 3. Default gateways
     default_gateways = {}
     code_rt, out_rt, _ = run_cmd(["ip", "-j", "route"])
     if code_rt == 0:
@@ -83,7 +81,7 @@ def get_links():
         except Exception:
             pass
 
-    # 4. DNS sunucularını resolvectl'den al
+    # 4. DNS servers via resolvectl
     link_dns = {}
     code_res, out_res, _ = run_cmd(["resolvectl", "status", "--json=short"])
     if code_res == 0:
@@ -111,9 +109,7 @@ def get_links():
         mac = iface.get("address", "")
         mtu = iface.get("mtu", 1500)
 
-        # Link type (ether, wlan, vpn/wireguard)
         link_type = "ether"
-        # /sys/class/net/<name>/wireless or phy80211
         if os.path.exists(f"/sys/class/net/{name}/wireless") or os.path.exists(f"/sys/class/net/{name}/phy80211"):
             link_type = "wlan"
         elif name.startswith("wg") or iface.get("link_type") == "wireguard":
@@ -121,7 +117,6 @@ def get_links():
         elif name.startswith("virbr") or name.startswith("br") or name.startswith("docker"):
             link_type = "bridge"
 
-        # IP adresleri
         ipv4_addrs = []
         ipv6_addrs = []
         for a in iface.get("addr_info", []):
@@ -133,22 +128,18 @@ def get_links():
             elif fam == "inet6" and local_ip and not local_ip.startswith("fe80"):
                 ipv6_addrs.append(f"{local_ip}/{prefix}")
 
-        # networkctl state bilgisi
         nc_info = networkd_links.get(name, {})
         net_op_state = nc_info.get("OperationalState", operstate)
         net_admin_state = nc_info.get("AdministrativeState", "unmanaged")
         net_setup_state = nc_info.get("SetupState", "")
 
-        # Display state
         status_label = net_op_state
         if not is_up:
             status_label = "down"
         elif not is_carrier:
             status_label = "no-carrier"
-        elif net_op_state in ("routable", "configured"):
+        elif net_op_state in ("routable", "configured") or (is_up and is_carrier and ipv4_addrs):
             status_label = "routable"
-        elif ipv4_addrs:
-            status_label = "connected"
 
         links.append({
             "name": name,
@@ -169,7 +160,6 @@ def get_links():
     return links
 
 def get_wifi_info():
-    # Find wireless interfaces
     wifi_ifaces = []
     try:
         for entry in os.listdir("/sys/class/net"):
@@ -185,14 +175,13 @@ def get_wifi_info():
     has_iwd = shutil.which("iwctl") is not None
     has_wpa = shutil.which("wpa_cli") is not None
 
-    backend_type = "none"
+    backend_type = "iwd" if has_iwd else ("wpa_supplicant" if has_wpa else "none")
     connected_ssid = None
     connected_signal = 0
     connected_bssid = ""
 
     # Check iwd first
     if has_iwd:
-        backend_type = "iwd"
         code, out, _ = run_cmd(["iwctl", "station", primary_iface, "show"])
         if code == 0:
             for line in out.splitlines():
@@ -201,12 +190,9 @@ def get_wifi_info():
                     parts = line.split(maxsplit=2)
                     if len(parts) >= 3:
                         connected_ssid = parts[2].strip()
-                elif line.startswith("State") and "connected" in line.lower():
-                    pass
 
-    # If not connected with iwd, check wpa_cli or iw
+    # Check wpa_cli if not found
     if not connected_ssid and has_wpa:
-        backend_type = "wpa_supplicant"
         code, out, _ = run_cmd(["wpa_cli", "-i", primary_iface, "status"])
         if code == 0:
             for line in out.splitlines():
@@ -215,7 +201,7 @@ def get_wifi_info():
                 elif line.startswith("bssid="):
                     connected_bssid = line.split("=", 1)[1].strip()
 
-    # If still not found, check `iw dev <iface> link`
+    # Fallback to iw link
     if not connected_ssid and shutil.which("iw"):
         code, out, _ = run_cmd(["iw", "dev", primary_iface, "link"])
         if code == 0 and "Not connected." not in out:
@@ -224,7 +210,6 @@ def get_wifi_info():
                 if line.startswith("SSID:"):
                     connected_ssid = line.split(":", 1)[1].strip()
                 elif line.startswith("signal:"):
-                    # signal: -54 dBm
                     m = re.search(r"(-?\d+)\s*dBm", line)
                     if m:
                         try:
@@ -251,23 +236,22 @@ def wifi_scan(iface=None):
         return {"success": False, "error": "No wireless interface found", "networks": []}
 
     target_iface = iface or wifi["primary_interface"]
-    backend = wifi["backend"]
+    
+    # Ensure interface is up before scanning
+    run_cmd(["ip", "link", "set", target_iface, "up"])
+    time.sleep(0.3)
+
     networks = []
 
-    # 1. iwd (iwctl)
+    # 1. Try iwctl
     if shutil.which("iwctl"):
-        # Trigger scan
         run_cmd(["iwctl", "station", target_iface, "scan"], timeout=8)
         code, out, _ = run_cmd(["iwctl", "station", target_iface, "get-networks"], timeout=6)
         if code == 0:
-            lines = out.splitlines()
-            for line in lines:
-                # Remove ANSI colors if any
+            for line in out.splitlines():
                 clean = re.sub(r'\x1b\[[0-9;]*m', '', line).strip()
                 if not clean or "Network name" in clean or "---" in clean:
                     continue
-                
-                # Check for connected indicator (marked with > or *)
                 is_connected = clean.startswith(">") or clean.startswith("*")
                 if is_connected:
                     clean = clean[1:].strip()
@@ -277,8 +261,6 @@ def wifi_scan(iface=None):
                     name = parts[0].strip()
                     sec = parts[1].strip() if len(parts) > 1 else "open"
                     sig_str = parts[2].strip() if len(parts) > 2 else "****"
-                    
-                    # Convert stars to percentage
                     stars = sig_str.count("*")
                     pct = int((stars / 5.0) * 100) if stars > 0 else 60
 
@@ -289,14 +271,10 @@ def wifi_scan(iface=None):
                         "connected": is_connected or (wifi.get("connected") and wifi["connected"].get("ssid") == name)
                     })
 
-    # 2. Fallback to nmcli or iw if iwctl returned nothing
+    # 2. Fallback to iw scan
     if not networks and shutil.which("iw"):
-        # Try iw dev <iface> scan
+        run_cmd(["iw", "dev", target_iface, "scan"], timeout=6)
         code, out, _ = run_cmd(["iw", "dev", target_iface, "scan", "dump"], timeout=4)
-        if code != 0 or not out:
-            run_cmd(["iw", "dev", target_iface, "scan"], timeout=6)
-            code, out, _ = run_cmd(["iw", "dev", target_iface, "scan", "dump"], timeout=4)
-        
         current_ssid = None
         current_signal = 50
         current_sec = "open"
@@ -311,7 +289,7 @@ def wifi_scan(iface=None):
                         "ssid": current_ssid,
                         "security": current_sec,
                         "signal": current_signal,
-                        "connected": wifi.get("connected") and wifi["connected"].get("ssid") == current_ssid
+                        "connected": bool(wifi.get("connected") and wifi["connected"].get("ssid") == current_ssid)
                     })
                 current_ssid = None
                 current_sec = "open"
@@ -330,10 +308,9 @@ def wifi_scan(iface=None):
                 "ssid": current_ssid,
                 "security": current_sec,
                 "signal": current_signal,
-                "connected": wifi.get("connected") and wifi["connected"].get("ssid") == current_ssid
+                "connected": bool(wifi.get("connected") and wifi["connected"].get("ssid") == current_ssid)
             })
 
-    # Sort networks: connected first, then signal descending
     networks.sort(key=lambda x: (not x["connected"], -x["signal"]))
     return {"success": True, "interface": target_iface, "networks": networks}
 
@@ -344,20 +321,24 @@ def wifi_connect(ssid, passphrase=None, iface=None):
 
     target_iface = iface or wifi["primary_interface"]
 
-    # Try iwd
+    # Ensure link is up
+    run_cmd(["ip", "link", "set", target_iface, "up"])
+    time.sleep(0.3)
+
+    # 1. Try iwctl
     if shutil.which("iwctl"):
         cmd = ["iwctl", "station", target_iface, "connect", ssid]
         if passphrase:
             cmd.extend(["-P", passphrase])
         code, out, err = run_cmd(cmd, timeout=15)
         if code == 0:
+            # Trigger networkd to get DHCP lease
+            run_cmd(["networkctl", "reconfigure", target_iface])
+            run_cmd(["networkctl", "renew", target_iface])
             return {"success": True, "message": f"Connected to {ssid}"}
-        else:
-            return {"success": False, "error": err or out or "Connection failed"}
 
-    # Try wpa_cli
+    # 2. Try wpa_cli
     if shutil.which("wpa_cli"):
-        # add_network, set_network, select_network
         code_add, net_id, _ = run_cmd(["wpa_cli", "-i", target_iface, "add_network"])
         if code_add == 0 and net_id.isdigit():
             run_cmd(["wpa_cli", "-i", target_iface, "set_network", net_id, "ssid", f'"{ssid}"'])
@@ -367,9 +348,12 @@ def wifi_connect(ssid, passphrase=None, iface=None):
                 run_cmd(["wpa_cli", "-i", target_iface, "set_network", net_id, "key_mgmt", "NONE"])
             run_cmd(["wpa_cli", "-i", target_iface, "enable_network", net_id])
             run_cmd(["wpa_cli", "-i", target_iface, "select_network", net_id])
-            return {"success": True, "message": f"Connection requested for {ssid}"}
+            time.sleep(1)
+            run_cmd(["networkctl", "reconfigure", target_iface])
+            run_cmd(["networkctl", "renew", target_iface])
+            return {"success": True, "message": f"Connected to {ssid}"}
 
-    return {"success": False, "error": "No supported wireless management daemon (iwd/wpa_supplicant) found."}
+    return {"success": False, "error": "Failed to connect to Wi-Fi"}
 
 def wifi_disconnect(iface=None):
     wifi = get_wifi_info()
@@ -385,34 +369,37 @@ def wifi_disconnect(iface=None):
         code, out, err = run_cmd(["wpa_cli", "-i", target_iface, "disconnect"])
         return {"success": (code == 0), "message": "Disconnected" if code == 0 else err}
 
-    return {"success": False, "error": "No wireless tool available to disconnect"}
+    return {"success": False, "error": "No wireless tool available"}
 
 def link_action(action, link_name):
-    # Allowed actions: reconfigure, renew, up, down
-    if action == "reconfigure":
+    # Support: connect, disconnect, reconfigure, renew, up, down
+    if action in ("connect", "up"):
+        # Bring link up + trigger networkd to reconfigure and acquire DHCP
+        run_cmd(["ip", "link", "set", link_name, "up"])
+        run_cmd(["networkctl", "up", link_name])
+        time.sleep(0.3)
         code, out, err = run_cmd(["networkctl", "reconfigure", link_name])
+        if code != 0:
+            run_cmd(["networkctl", "renew", link_name])
+        return {"success": True, "action": action, "link": link_name, "message": f"{link_name} connected"}
+    
+    elif action in ("disconnect", "down"):
+        # Put interface down cleanly
+        run_cmd(["networkctl", "down", link_name])
+        run_cmd(["ip", "link", "set", link_name, "down"])
+        return {"success": True, "action": action, "link": link_name, "message": f"{link_name} disconnected"}
+
+    elif action == "reconfigure":
+        code, out, err = run_cmd(["networkctl", "reconfigure", link_name])
+        return {"success": (code == 0), "action": action, "link": link_name, "output": out if code == 0 else err}
+
     elif action == "renew":
         code, out, err = run_cmd(["networkctl", "renew", link_name])
-    elif action == "up":
-        code, out, err = run_cmd(["networkctl", "up", link_name])
-        if code != 0:
-            code, out, err = run_cmd(["ip", "link", "set", link_name, "up"])
-    elif action == "down":
-        code, out, err = run_cmd(["networkctl", "down", link_name])
-        if code != 0:
-            code, out, err = run_cmd(["ip", "link", "set", link_name, "down"])
-    else:
-        return {"success": False, "error": f"Unknown action {action}"}
+        return {"success": (code == 0), "action": action, "link": link_name, "output": out if code == 0 else err}
 
-    return {
-        "success": (code == 0),
-        "action": action,
-        "link": link_name,
-        "output": out if code == 0 else err
-    }
+    return {"success": False, "error": f"Unknown action {action}"}
 
 def service_action(action):
-    # start, restart, reload systemd-networkd
     if action in ("start", "stop", "restart", "reload"):
         code, out, err = run_cmd(["systemctl", action, "systemd-networkd"])
         return {"success": (code == 0), "action": action, "output": out if code == 0 else err}
@@ -427,7 +414,6 @@ def get_full_status():
     links = get_links()
     wifi = get_wifi_info()
 
-    # Determine overall connected state
     is_online = False
     connected_link = None
     for l in links:

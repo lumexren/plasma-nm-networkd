@@ -140,8 +140,9 @@ PlasmoidItem {
                 }
             }
 
-            // Refresh status after an action
+            // Refresh status immediately and shortly after to catch DHCP updates
             root.refreshStatus();
+            refreshDelayTimer.restart();
         }
     }
 
@@ -151,6 +152,14 @@ PlasmoidItem {
         running: true
         repeat: true
         triggeredOnStart: true
+        onTriggered: root.refreshStatus()
+    }
+
+    Timer {
+        id: refreshDelayTimer
+        interval: 1200
+        running: false
+        repeat: false
         onTriggered: root.refreshStatus()
     }
 
