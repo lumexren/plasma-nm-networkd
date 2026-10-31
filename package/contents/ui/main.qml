@@ -174,6 +174,17 @@ PlasmoidItem {
         }
     }
 
+    readonly property bool isPlasmoidExpanded: root.expanded || (typeof Plasmoid !== "undefined" && Plasmoid.expanded)
+
+    Connections {
+        target: (typeof Plasmoid !== "undefined") ? Plasmoid : null
+        function onExpandedChanged() {
+            if (Plasmoid.expanded) {
+                root.refreshStatus();
+            }
+        }
+    }
+
     onExpandedChanged: () => {
         if (root.expanded) {
             root.refreshStatus();
@@ -182,7 +193,7 @@ PlasmoidItem {
 
     Timer {
         id: pollTimer
-        interval: root.expanded ? 2000 : 12000
+        interval: root.isPlasmoidExpanded ? 1500 : 8000
         running: true
         repeat: true
         triggeredOnStart: true

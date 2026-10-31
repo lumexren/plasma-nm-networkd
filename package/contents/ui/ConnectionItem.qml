@@ -44,6 +44,11 @@ PlasmaExtras.ExpandableListItem {
         return itemData.statusText || "";
     }
 
+    property bool isUserCollapsing: true
+    Component.onDestruction: {
+        isUserCollapsing = false;
+    }
+
     onItemExpanded: {
         if (fullRepresentation && itemKey) {
             fullRepresentation.setItemExpanded(itemKey, true);
@@ -51,7 +56,7 @@ PlasmaExtras.ExpandableListItem {
     }
 
     onItemCollapsed: {
-        if (fullRepresentation && itemKey) {
+        if (isUserCollapsing && fullRepresentation && itemKey) {
             fullRepresentation.setItemExpanded(itemKey, false);
         }
     }

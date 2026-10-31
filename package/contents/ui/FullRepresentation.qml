@@ -29,6 +29,12 @@ Item {
     function setItemExpanded(key, val) {
         expandedItems[key] = val;
     }
+    function hasAnyExpandedItem() {
+        for (let k in expandedItems) {
+            if (expandedItems[k]) return true;
+        }
+        return false;
+    }
 
     ListModel {
         id: connectionsModel
@@ -139,17 +145,21 @@ Item {
             }
         }
 
-        // Remove obsolete entries
-        for (let m = connectionsModel.count - 1; m >= 0; m--) {
-            const k = connectionsModel.get(m).key;
-            let found = false;
-            for (let t = 0; t < targetList.length; t++) {
-                if (targetList[t].key === k) {
-                    found = true;
-                    break;
+        const isInteracting = root.hasAnyExpandedItem();
+
+        // Remove obsolete entries (only if no item is currently expanded to prevent delegate disruption)
+        if (!isInteracting) {
+            for (let m = connectionsModel.count - 1; m >= 0; m--) {
+                const k = connectionsModel.get(m).key;
+                let found = false;
+                for (let t = 0; t < targetList.length; t++) {
+                    if (targetList[t].key === k) {
+                        found = true;
+                        break;
+                    }
                 }
+                if (!found) connectionsModel.remove(m);
             }
-            if (!found) connectionsModel.remove(m);
         }
 
         // Synchronize in-place or append new entries
@@ -169,7 +179,7 @@ Item {
                         connectionsModel.setProperty(existingIdx, prop, target[prop]);
                     }
                 }
-            } else {
+            } else if (!isInteracting) {
                 if (t < connectionsModel.count) {
                     connectionsModel.insert(t, target);
                 } else {
