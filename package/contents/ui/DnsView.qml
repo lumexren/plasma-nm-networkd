@@ -29,11 +29,11 @@ ColumnLayout {
                     Layout.fillWidth: true
                     spacing: 2
                     QQC2.Label {
-                        text: "systemd-networkd & resolved Yönetimi"
+                        text: i18n("systemd-networkd & resolved Management")
                         font.weight: Font.Bold
                     }
                     QQC2.Label {
-                        text: "Servisleri yeniden başlatın, yapılandırmayı güncelleyin veya DNS önbelleğini boşaltın."
+                        text: i18n("Restart network services, reload configuration or flush DNS resolver cache.")
                         font.pointSize: Kirigami.Theme.smallFont.pointSize
                         color: Kirigami.Theme.disabledTextColor
                     }
@@ -48,19 +48,19 @@ ColumnLayout {
 
                 QQC2.Button {
                     icon.name: "edit-clear-history"
-                    text: "DNS Önbelleğini Temizle"
+                    text: i18n("Flush DNS Cache")
                     onClicked: root.requestFlushDns()
                 }
 
                 QQC2.Button {
                     icon.name: "system-reboot"
-                    text: "Networkd Reload"
+                    text: i18n("Reload Networkd")
                     onClicked: root.requestServiceAction("reload")
                 }
 
                 QQC2.Button {
                     icon.name: "view-refresh"
-                    text: "Networkd Restart"
+                    text: i18n("Restart Networkd")
                     onClicked: root.requestServiceAction("restart")
                 }
 
@@ -77,7 +77,7 @@ ColumnLayout {
             spacing: Kirigami.Units.smallSpacing
 
             QQC2.Label {
-                text: "Aktif DNS & Ağ Geçitleri Özeti"
+                text: i18n("Active DNS & Gateways Summary")
                 font.weight: Font.Bold
             }
 
@@ -114,12 +114,12 @@ ColumnLayout {
                         ColumnLayout {
                             spacing: 2
                             QQC2.Label {
-                                text: "Ağ Geçidi (Default Gateway):"
+                                text: i18n("Default Gateway:")
                                 color: Kirigami.Theme.disabledTextColor
                                 font.pointSize: Kirigami.Theme.smallFont.pointSize
                             }
                             QQC2.Label {
-                                text: modelData.gateway || "Yok"
+                                text: modelData.gateway || i18n("None")
                                 font.family: "monospace"
                                 font.pointSize: Kirigami.Theme.smallFont.pointSize
                             }
@@ -128,12 +128,12 @@ ColumnLayout {
                         ColumnLayout {
                             spacing: 2
                             QQC2.Label {
-                                text: "DNS Sunucuları:"
+                                text: i18n("DNS Servers:")
                                 color: Kirigami.Theme.disabledTextColor
                                 font.pointSize: Kirigami.Theme.smallFont.pointSize
                             }
                             QQC2.Label {
-                                text: (modelData.dns && modelData.dns.length > 0) ? modelData.dns.join(", ") : "Yok"
+                                text: (modelData.dns && modelData.dns.length > 0) ? modelData.dns.join(", ") : i18n("None")
                                 font.family: "monospace"
                                 font.pointSize: Kirigami.Theme.smallFont.pointSize
                             }

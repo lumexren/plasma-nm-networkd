@@ -1,17 +1,22 @@
 import QtQuick
 import QtQuick.Layouts
+import org.kde.kirigami as Kirigami
+import org.kde.plasma.core as PlasmaCore
 import org.kde.plasma.plasmoid
 import org.kde.plasma.plasma5support as Plasma5Support
 
 PlasmoidItem {
     id: root
 
-    preferredRepresentation: compactRepresentation
+    Plasmoid.status: PlasmaCore.Types.ActiveStatus
+    Plasmoid.backgroundHints: PlasmaCore.Types.DefaultBackground
+
     compactRepresentation: CompactRepresentation {
-        rootItem: root
+        plasmoidItem: root
     }
+
     fullRepresentation: FullRepresentation {
-        rootItem: root
+        plasmoidItem: root
     }
 
     property var backendData: ({
@@ -22,18 +27,46 @@ PlasmoidItem {
         wifi: { available: false, interfaces: [] }
     })
 
-    toolTipMainText: backendData.online ? ((backendData.active_link || "Ağ") + " Bağlı") : "Ağ Bağlantısı Yok"
+    readonly property string calculatedIcon: {
+        if (!backendData.online) {
+            return "network-offline";
+        }
+        let activeObj = null;
+        const links = backendData.links || [];
+        for (let i = 0; i < links.length; i++) {
+            if (links[i].name === backendData.active_link) {
+                activeObj = links[i];
+                break;
+            }
+        }
+        if (activeObj && activeObj.type === "wlan") {
+            const wifi = backendData.wifi;
+            const sig = (wifi && wifi.connected) ? wifi.connected.signal : 60;
+            if (sig >= 80) return "network-wireless-connected-100";
+            if (sig >= 60) return "network-wireless-connected-75";
+            if (sig >= 40) return "network-wireless-connected-50";
+            return "network-wireless-connected-25";
+        } else if (activeObj && (activeObj.type === "wireguard" || activeObj.type === "vpn")) {
+            return "network-vpn";
+        } else {
+            return "network-wired-activated";
+        }
+    }
+
+    Plasmoid.icon: calculatedIcon
+
+    toolTipMainText: backendData.online ? i18n("%1 Connected", (backendData.active_link || i18n("Network"))) : i18n("No network connection")
     toolTipSubText: {
-        if (!backendData.online) return "systemd-networkd çalışıyor, ancak internet erişimi yok.";
+        if (!backendData.online) return i18n("systemd-networkd is running, but there is no internet access.");
         let txt = "";
         const links = backendData.links || [];
         for (let i = 0; i < links.length; i++) {
             if (links[i].name === backendData.active_link) {
                 if (links[i].ipv4 && links[i].ipv4.length > 0) {
-                    txt += "IP: " + links[i].ipv4[0] + "\n";
+                    txt += i18n("IP: %1", links[i].ipv4[0]) + "\n";
                 }
                 if (links[i].gateway) {
-                    txt += "Ağ Geçidi: " + links[i].gateway;
+                    txt += i18n("Gateway: %1", links[i].gateway);
                 }
                 break;
             }
@@ -83,10 +116,10 @@ PlasmoidItem {
                     if (res.success && res.networks) {
                         root.wifiNetworks = res.networks;
                     } else if (res.error) {
-                        root.showBanner("Wi-Fi tarama hatası: " + res.error, true);
+                        root.showBanner(i18n("Wi-Fi scan error: %1", res.error), true);
                     }
                 } catch (e) {
-                    root.showBanner("Wi-Fi sonucu okunamadı", true);
+                    root.showBanner(i18n("Failed to parse Wi-Fi scan output"), true);
                 }
                 return;
             }
@@ -95,15 +128,15 @@ PlasmoidItem {
             try {
                 const res = JSON.parse(stdout);
                 if (res.success) {
-                    root.showBanner(res.message || res.output || "İşlem başarıyla tamamlandı", false);
+                    root.showBanner(res.message || res.output || i18n("Operation completed successfully"), false);
                 } else {
-                    root.showBanner(res.error || stderr || "İşlem başarısız oldu", true);
+                    root.showBanner(res.error || stderr || i18n("Operation failed"), true);
                 }
             } catch (e) {
                 if (exitCode === 0) {
-                    root.showBanner(stdout || "İşlem tamamlandı", false);
+                    root.showBanner(stdout || i18n("Operation completed"), false);
                 } else {
-                    root.showBanner(stderr || "Hata oluştu", true);
+                    root.showBanner(stderr || i18n("An error occurred"), true);
                 }
             }
 
@@ -141,29 +174,29 @@ PlasmoidItem {
     }
 
     function connectWifi(ssid, password) {
-        showBanner("'" + ssid + "' ağına bağlanılıyor...", false);
+        showBanner(i18n("Connecting to '%1'…", ssid), false);
         const passEscaped = password ? ("'" + password.replace(/'/g, "'\\''") + "'") : "''";
         const ssidEscaped = "'" + ssid.replace(/'/g, "'\\''") + "'";
         runBackendCmd("wifi_connect " + ssidEscaped + " " + passEscaped);
     }
 
     function disconnectWifi() {
-        showBanner("Wi-Fi bağlantısı kesiliyor...", false);
+        showBanner(i18n("Disconnecting Wi-Fi…"), false);
         runBackendCmd("wifi_disconnect");
     }
 
     function executeLinkAction(action, linkName) {
-        showBanner(linkName + " üzerinde " + action + " işlemi yapılıyor...", false);
+        showBanner(i18n("Applying %1 on %2…", action, linkName), false);
         runBackendCmd("link_action " + action + " " + linkName);
     }
 
     function executeServiceAction(action) {
-        showBanner("systemd-networkd " + action + " çalıştırılıyor...", false);
+        showBanner(i18n("Running systemd-networkd %1…", action), false);
         runBackendCmd("service_action " + action);
     }
 
     function flushDns() {
-        showBanner("DNS önbelleği temizleniyor...", false);
+        showBanner(i18n("Flushing DNS resolver cache…"), false);
         runBackendCmd("flush_dns");
     }
 

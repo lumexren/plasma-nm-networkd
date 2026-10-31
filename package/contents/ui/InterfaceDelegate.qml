@@ -62,11 +62,11 @@ Kirigami.AbstractCard {
                 QQC2.Label {
                     text: {
                         if (root.ipv4List.length > 0) {
-                            return root.ipv4List[0] + (root.gateway ? " (GW: " + root.gateway + ")" : "");
+                            return root.ipv4List[0] + (root.gateway ? " (" + i18n("GW:") + " " + root.gateway + ")" : "");
                         } else if (!root.isUp) {
-                            return "Arayüz kapalı (Down)";
+                            return i18n("Interface is down");
                         } else {
-                            return "IP adresi atanmamış";
+                            return i18n("No IP address assigned");
                         }
                     }
                     font.pointSize: Kirigami.Theme.smallFont.pointSize
@@ -79,10 +79,10 @@ Kirigami.AbstractCard {
             // Quick Up/Down Toggle
             QQC2.ToolButton {
                 icon.name: root.isUp ? "network-disconnect" : "network-connect"
-                text: root.isUp ? "Kapat" : "Aç"
+                text: root.isUp ? i18n("Turn Off") : i18n("Turn On")
                 display: QQC2.AbstractButton.IconOnly
                 QQC2.ToolTip.visible: hovered
-                QQC2.ToolTip.text: root.isUp ? "Arayüzü Kapat (Down)" : "Arayüzü Aç (Up)"
+                QQC2.ToolTip.text: root.isUp ? i18n("Turn interface off (Down)") : i18n("Turn interface on (Up)")
                 onClicked: {
                     root.requestAction(root.isUp ? "down" : "up", root.ifName);
                 }
@@ -93,7 +93,7 @@ Kirigami.AbstractCard {
                 icon.name: root.expanded ? "arrow-up" : "arrow-down"
                 display: QQC2.AbstractButton.IconOnly
                 QQC2.ToolTip.visible: hovered
-                QQC2.ToolTip.text: root.expanded ? "Daha az bilgi" : "Ayrıntıları göster"
+                QQC2.ToolTip.text: root.expanded ? i18n("Show less") : i18n("Show details")
                 onClicked: root.expanded = !root.expanded
             }
         }
@@ -117,7 +117,7 @@ Kirigami.AbstractCard {
                 Layout.fillWidth: true
 
                 QQC2.Label {
-                    text: "MAC Adresi:"
+                    text: i18n("MAC Address:")
                     color: Kirigami.Theme.disabledTextColor
                     font.pointSize: Kirigami.Theme.smallFont.pointSize
                 }
@@ -128,7 +128,7 @@ Kirigami.AbstractCard {
                 }
 
                 QQC2.Label {
-                    text: "MTU:"
+                    text: i18n("MTU:")
                     color: Kirigami.Theme.disabledTextColor
                     font.pointSize: Kirigami.Theme.smallFont.pointSize
                 }
@@ -138,7 +138,7 @@ Kirigami.AbstractCard {
                 }
 
                 QQC2.Label {
-                    text: "IPv4:"
+                    text: i18n("IPv4:")
                     color: Kirigami.Theme.disabledTextColor
                     font.pointSize: Kirigami.Theme.smallFont.pointSize
                     visible: root.ipv4List.length > 0
@@ -151,7 +151,7 @@ Kirigami.AbstractCard {
                 }
 
                 QQC2.Label {
-                    text: "IPv6:"
+                    text: i18n("IPv6:")
                     color: Kirigami.Theme.disabledTextColor
                     font.pointSize: Kirigami.Theme.smallFont.pointSize
                     visible: root.ipv6List.length > 0
@@ -164,7 +164,7 @@ Kirigami.AbstractCard {
                 }
 
                 QQC2.Label {
-                    text: "Ağ Geçidi (GW):"
+                    text: i18n("Gateway:")
                     color: Kirigami.Theme.disabledTextColor
                     font.pointSize: Kirigami.Theme.smallFont.pointSize
                     visible: root.gateway.length > 0
@@ -177,7 +177,7 @@ Kirigami.AbstractCard {
                 }
 
                 QQC2.Label {
-                    text: "DNS Sunucuları:"
+                    text: i18n("DNS Servers:")
                     color: Kirigami.Theme.disabledTextColor
                     font.pointSize: Kirigami.Theme.smallFont.pointSize
                     visible: root.dnsList.length > 0
@@ -198,14 +198,14 @@ Kirigami.AbstractCard {
 
                 QQC2.Button {
                     icon.name: "view-refresh"
-                    text: "Yeniden Yapılandır (Reconfigure)"
+                    text: i18n("Reconfigure")
                     font.pointSize: Kirigami.Theme.smallFont.pointSize
                     onClicked: root.requestAction("reconfigure", root.ifName)
                 }
 
                 QQC2.Button {
                     icon.name: "network-connect"
-                    text: "DHCP Yenile (Renew)"
+                    text: i18n("Renew DHCP")
                     font.pointSize: Kirigami.Theme.smallFont.pointSize
                     onClicked: root.requestAction("renew", root.ifName)
                 }

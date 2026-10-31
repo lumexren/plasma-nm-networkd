@@ -6,9 +6,9 @@ import org.kde.plasma.plasmoid
 Item {
     id: root
 
-    property var rootItem: null
+    property PlasmoidItem plasmoidItem: null
 
-    readonly property var backendData: (rootItem && rootItem.backendData) ? rootItem.backendData : ({})
+    readonly property var backendData: (plasmoidItem && plasmoidItem.backendData) ? plasmoidItem.backendData : ({})
     readonly property bool isOnline: backendData.online || false
     readonly property string activeLink: backendData.active_link || ""
     readonly property var activeLinkObj: {
@@ -37,8 +37,6 @@ Item {
         }
     }
 
-    Plasmoid.icon: iconName
-
     Kirigami.Icon {
         anchors.fill: parent
         anchors.margins: Kirigami.Units.smallSpacing / 2
@@ -51,8 +49,23 @@ Item {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
-        onClicked: {
-            Plasmoid.expanded = !Plasmoid.expanded;
+
+        property bool wasExpanded: false
+
+        onPressed: mouse => {
+            if (root.plasmoidItem) {
+                wasExpanded = root.plasmoidItem.expanded;
+            } else if (typeof Plasmoid !== "undefined") {
+                wasExpanded = Plasmoid.expanded;
+            }
+        }
+
+        onClicked: mouse => {
+            if (root.plasmoidItem) {
+                root.plasmoidItem.expanded = !wasExpanded;
+            } else if (typeof Plasmoid !== "undefined") {
+                Plasmoid.expanded = !Plasmoid.expanded;
+            }
         }
     }
 }

@@ -7,18 +7,15 @@
             }
         ],
         "Category": "Network and Connectivity",
-        "Description": "Network management widget powered by systemd-networkd, iwd and resolvectl",
-        "Description[tr]": "systemd-networkd, iwd ve resolvectl tabanlı ağ yönetimi aracı",
+        "Description": "Network management widget powered by systemd-networkd, iwd and resolvectl (plasma-nm replacement)",
+        "Description[tr]": "systemd-networkd, iwd ve resolvectl tabanlı ağ yönetimi aracı (plasma-nm alternatifi)",
         "Icon": "network-wired",
         "Id": "org.kde.plasma.networkd",
         "License": "GPL-3.0+",
-        "Name": "Networkd Connections",
-        "Name[tr]": "Networkd Ağ Bağlantıları",
-        "Version": "1.0.0",
+        "Name": "Networks (systemd-networkd)",
+        "Name[tr]": "Ağ Bağlantıları (systemd-networkd)",
+        "Version": "1.1.0",
         "Website": "https://github.com/systemd-networkd-plasma"
     },
-    "X-Plasma-API-Minimum-Version": "6.0",
-    "X-Plasma-Provides": [
-        "org.kde.plasma.networkmanagement"
-    ]
+    "X-Plasma-API-Minimum-Version": "6.0"
 }

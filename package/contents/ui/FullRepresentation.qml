@@ -8,12 +8,17 @@ import org.kde.plasma.components as PlasmaComponents
 Item {
     id: root
 
-    property var rootItem: null
+    property PlasmoidItem plasmoidItem: null
 
-    implicitWidth: Kirigami.Units.gridUnit * 28
-    implicitHeight: Kirigami.Units.gridUnit * 32
+    Layout.preferredWidth: Kirigami.Units.gridUnit * 28
+    Layout.preferredHeight: Kirigami.Units.gridUnit * 30
+    Layout.minimumWidth: Kirigami.Units.gridUnit * 22
+    Layout.minimumHeight: Kirigami.Units.gridUnit * 20
 
-    readonly property var backendData: (rootItem && rootItem.backendData) ? rootItem.backendData : ({})
+    implicitWidth: Layout.preferredWidth
+    implicitHeight: Layout.preferredHeight
+
+    readonly property var backendData: (plasmoidItem && plasmoidItem.backendData) ? plasmoidItem.backendData : ({})
     readonly property var netStatus: backendData.systemd_networkd || ({})
     readonly property bool isNetworkdActive: netStatus.active || false
 
@@ -37,18 +42,18 @@ Item {
                 Layout.fillWidth: true
                 spacing: 2
                 QQC2.Label {
-                    text: "Systemd Networkd"
+                    text: i18n("Systemd Networkd")
                     font.weight: Font.Bold
                     font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.1
                 }
                 RowLayout {
                     spacing: 4
                     StatusBadge {
-                        stateText: root.isNetworkdActive ? "networkd: aktif" : "networkd: pasif"
+                        stateText: root.isNetworkdActive ? "active" : "inactive"
                     }
                     StatusBadge {
                         visible: root.backendData.online || false
-                        stateText: "çevrimiçi"
+                        stateText: "online"
                     }
                 }
             }
@@ -57,8 +62,8 @@ Item {
                 icon.name: "view-refresh"
                 display: QQC2.AbstractButton.IconOnly
                 QQC2.ToolTip.visible: hovered
-                QQC2.ToolTip.text: "Durumu Yenile"
-                onClicked: if (root.rootItem) root.rootItem.refreshStatus()
+                QQC2.ToolTip.text: i18n("Refresh status")
+                onClicked: if (root.plasmoidItem) root.plasmoidItem.refreshStatus()
             }
         }
 
@@ -66,12 +71,12 @@ Item {
         Kirigami.InlineMessage {
             id: bannerMsg
             Layout.fillWidth: true
-            visible: root.rootItem ? (root.rootItem.actionMessage.length > 0) : false
-            text: root.rootItem ? root.rootItem.actionMessage : ""
-            type: (root.rootItem && root.rootItem.actionIsError) ? Kirigami.MessageType.Error : Kirigami.MessageType.Positive
+            visible: (root.plasmoidItem && root.plasmoidItem.actionMessage.length > 0) || false
+            text: root.plasmoidItem ? root.plasmoidItem.actionMessage : ""
+            type: (root.plasmoidItem && root.plasmoidItem.actionIsError) ? Kirigami.MessageType.Error : Kirigami.MessageType.Positive
             showCloseButton: true
             onVisibleChanged: {
-                if (!visible && root.rootItem) root.rootItem.actionMessage = "";
+                if (!visible && root.plasmoidItem) root.plasmoidItem.actionMessage = "";
             }
         }
 
@@ -81,16 +86,16 @@ Item {
             Layout.fillWidth: true
 
             QQC2.TabButton {
-                text: "Arayüzler"
+                text: i18n("Interfaces")
                 icon.name: "network-wired"
             }
             QQC2.TabButton {
-                text: "Wi-Fi"
+                text: i18n("Wi-Fi")
                 icon.name: "network-wireless"
                 visible: root.backendData.wifi && root.backendData.wifi.available
             }
             QQC2.TabButton {
-                text: "DNS & Sistem"
+                text: i18n("DNS & System")
                 icon.name: "network-server"
             }
         }
@@ -119,7 +124,7 @@ Item {
                             width: ifacesList.width
                             linkData: modelData
                             onRequestAction: (action, linkName) => {
-                                if (root.rootItem) root.rootItem.executeLinkAction(action, linkName);
+                                if (root.plasmoidItem) root.plasmoidItem.executeLinkAction(action, linkName);
                             }
                         }
                     }
@@ -143,7 +148,7 @@ Item {
                             text: {
                                 const w = root.backendData.wifi;
                                 if (!w) return "";
-                                return "Kart: " + (w.primary_interface || "") + " (" + (w.backend || "iwd") + ")";
+                                return i18n("Interface: %1 (%2)", w.primary_interface || "", w.backend || "iwd");
                             }
                             font.pointSize: Kirigami.Theme.smallFont.pointSize
                             color: Kirigami.Theme.disabledTextColor
@@ -151,17 +156,17 @@ Item {
                         }
 
                         QQC2.BusyIndicator {
-                            running: root.rootItem ? root.rootItem.isScanningWifi : false
+                            running: (root.plasmoidItem && root.plasmoidItem.isScanningWifi) || false
                             visible: running
                             implicitWidth: Kirigami.Units.iconSizes.small
                             implicitHeight: Kirigami.Units.iconSizes.small
                         }
 
                         QQC2.Button {
-                            text: "Ağları Tara"
+                            text: i18n("Scan Networks")
                             icon.name: "network-wireless"
-                            enabled: root.rootItem ? !root.rootItem.isScanningWifi : true
-                            onClicked: if (root.rootItem) root.rootItem.scanWifi()
+                            enabled: (root.plasmoidItem && !root.plasmoidItem.isScanningWifi) || false
+                            onClicked: if (root.plasmoidItem) root.plasmoidItem.scanWifi()
                         }
                     }
 
@@ -177,22 +182,22 @@ Item {
                             id: wifiList
                             width: parent.width
                             spacing: Kirigami.Units.smallSpacing
-                            model: root.rootItem ? root.rootItem.wifiNetworks : []
+                            model: (root.plasmoidItem && root.plasmoidItem.wifiNetworks) ? root.plasmoidItem.wifiNetworks : []
 
                             delegate: WifiDelegate {
                                 width: wifiList.width
                                 networkData: modelData
                                 onConnectClicked: (ssid, password) => {
-                                    if (root.rootItem) root.rootItem.connectWifi(ssid, password);
+                                    if (root.plasmoidItem) root.plasmoidItem.connectWifi(ssid, password);
                                 }
                                 onDisconnectClicked: (ssid) => {
-                                    if (root.rootItem) root.rootItem.disconnectWifi();
+                                    if (root.plasmoidItem) root.plasmoidItem.disconnectWifi();
                                 }
                             }
 
                             QQC2.Label {
                                 anchors.centerIn: parent
-                                text: (root.rootItem && root.rootItem.isScanningWifi) ? "Kablosuz ağlar taranıyor..." : "Ağ bulunamadı veya henüz taranmadı.\nYukarıdaki 'Ağları Tara' butonuna basın."
+                                text: (root.plasmoidItem && root.plasmoidItem.isScanningWifi) ? i18n("Scanning wireless networks…") : i18n("No networks found.\nClick 'Scan Networks' above.")
                                 horizontalAlignment: Text.AlignHCenter
                                 color: Kirigami.Theme.disabledTextColor
                                 visible: wifiList.count === 0

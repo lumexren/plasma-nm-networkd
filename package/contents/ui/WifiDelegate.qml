@@ -11,7 +11,7 @@ Kirigami.AbstractCard {
     signal connectClicked(string ssid, string password)
     signal disconnectClicked(string ssid)
 
-    readonly property string ssid: networkData.ssid || "Gizli Ağ"
+    readonly property string ssid: networkData.ssid || i18n("Hidden Network")
     readonly property int signalPct: networkData.signal || 50
     readonly property string security: (networkData.security || "open").toLowerCase()
     readonly property bool isSecured: security !== "open" && security !== "none"
@@ -62,12 +62,12 @@ Kirigami.AbstractCard {
 
                     StatusBadge {
                         visible: root.isConnected
-                        stateText: "Bağlı"
+                        stateText: "connected"
                     }
                 }
 
                 QQC2.Label {
-                    text: (root.isSecured ? root.security.toUpperCase() : "Açık Ağ") + " • %" + root.signalPct + " Sinyal"
+                    text: (root.isSecured ? root.security.toUpperCase() : i18n("Open Network")) + " • " + i18n("%1% Signal", root.signalPct)
                     font.pointSize: Kirigami.Theme.smallFont.pointSize * 0.9
                     color: Kirigami.Theme.disabledTextColor
                 }
@@ -76,7 +76,7 @@ Kirigami.AbstractCard {
             QQC2.Button {
                 id: actionBtn
                 visible: !root.isConnected && !root.showPasswordInput
-                text: "Bağlan"
+                text: i18n("Connect")
                 icon.name: "network-connect"
                 onClicked: {
                     if (root.isSecured) {
@@ -90,7 +90,7 @@ Kirigami.AbstractCard {
 
             QQC2.Button {
                 visible: root.isConnected
-                text: "Bağlantıyı Kes"
+                text: i18n("Disconnect")
                 icon.name: "network-disconnect"
                 onClicked: {
                     root.disconnectClicked(root.ssid);
@@ -107,7 +107,7 @@ Kirigami.AbstractCard {
             QQC2.TextField {
                 id: pwdField
                 Layout.fillWidth: true
-                placeholderText: "Wi-Fi Parolası..."
+                placeholderText: i18n("Wi-Fi Password…")
                 echoMode: showPasswordCheck.checked ? TextInput.Normal : TextInput.Password
                 onAccepted: {
                     if (text.length > 0) {
@@ -120,12 +120,12 @@ Kirigami.AbstractCard {
 
             QQC2.CheckBox {
                 id: showPasswordCheck
-                text: "Göster"
+                text: i18n("Show")
                 font.pointSize: Kirigami.Theme.smallFont.pointSize
             }
 
             QQC2.Button {
-                text: "Katıl"
+                text: i18n("Join")
                 icon.name: "dialog-ok-apply"
                 enabled: pwdField.text.length >= 8 || !root.isSecured
                 onClicked: {
@@ -136,7 +136,7 @@ Kirigami.AbstractCard {
             }
 
             QQC2.Button {
-                text: "İptal"
+                text: i18n("Cancel")
                 icon.name: "dialog-cancel"
                 onClicked: {
                     root.showPasswordInput = false;
