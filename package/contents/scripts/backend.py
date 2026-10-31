@@ -169,63 +169,70 @@ def get_wifi_info():
         pass
 
     if not wifi_ifaces:
-        return {"available": False, "interfaces": []}
+        return {"available": False, "interfaces": [], "reason": "No hardware"}
 
     primary_iface = wifi_ifaces[0]
+
+    # Check rfkill: if blocked, Wi-Fi is strictly unavailable and should be hidden
+    code_rf, out_rf, _ = run_cmd(["rfkill", "list", "wifi"])
+    if "Soft blocked: yes" in out_rf or "Hard blocked: yes" in out_rf:
+        return {
+            "available": False,
+            "interfaces": wifi_ifaces,
+            "primary_interface": primary_iface,
+            "reason": "blocked_by_rfkill"
+        }
+
     has_iwd = shutil.which("iwctl") is not None
     has_wpa = shutil.which("wpa_cli") is not None
 
-    backend_type = "iwd" if has_iwd else ("wpa_supplicant" if has_wpa else "none")
+    backend_type = "none"
+    is_usable = False
     connected_ssid = None
     connected_signal = 0
-    connected_bssid = ""
 
-    # Check iwd first
+    # 1. Check iwd daemon
     if has_iwd:
-        code, out, _ = run_cmd(["iwctl", "station", primary_iface, "show"])
-        if code == 0:
-            for line in out.splitlines():
-                line = line.strip()
-                if line.startswith("Connected network"):
-                    parts = line.split(maxsplit=2)
+        code_iwd, out_iwd, _ = run_cmd(["iwctl", "station", primary_iface, "show"])
+        if code_iwd == 0:
+            backend_type = "iwd"
+            is_usable = True
+            for line in out_iwd.splitlines():
+                if "Connected network" in line:
+                    parts = line.strip().split(maxsplit=2)
                     if len(parts) >= 3:
                         connected_ssid = parts[2].strip()
 
-    # Check wpa_cli if not found
-    if not connected_ssid and has_wpa:
-        code, out, _ = run_cmd(["wpa_cli", "-i", primary_iface, "status"])
-        if code == 0:
-            for line in out.splitlines():
+    # 2. Check wpa_supplicant daemon
+    if not is_usable and has_wpa:
+        code_wpa, out_wpa, _ = run_cmd(["wpa_cli", "-i", primary_iface, "ping"])
+        if code_wpa == 0 and "PONG" in out_wpa:
+            backend_type = "wpa_supplicant"
+            is_usable = True
+            code_stat, out_stat, _ = run_cmd(["wpa_cli", "-i", primary_iface, "status"])
+            for line in out_stat.splitlines():
                 if line.startswith("ssid="):
                     connected_ssid = line.split("=", 1)[1].strip()
-                elif line.startswith("bssid="):
-                    connected_bssid = line.split("=", 1)[1].strip()
 
-    # Fallback to iw link
-    if not connected_ssid and shutil.which("iw"):
-        code, out, _ = run_cmd(["iw", "dev", primary_iface, "link"])
-        if code == 0 and "Not connected." not in out:
-            for line in out.splitlines():
-                line = line.strip()
-                if line.startswith("SSID:"):
-                    connected_ssid = line.split(":", 1)[1].strip()
-                elif line.startswith("signal:"):
-                    m = re.search(r"(-?\d+)\s*dBm", line)
-                    if m:
-                        try:
-                            dbm = int(m.group(1))
-                            connected_signal = max(0, min(100, 2 * (dbm + 100)))
-                        except Exception:
-                            pass
+    # 3. Check raw iw link
+    if not is_usable and shutil.which("iw"):
+        code_iw, out_iw, _ = run_cmd(["iw", "dev", primary_iface, "link"])
+        if code_iw == 0:
+            backend_type = "iw"
+            is_usable = True
+            if "Not connected." not in out_iw:
+                for line in out_iw.splitlines():
+                    if line.strip().startswith("SSID:"):
+                        connected_ssid = line.strip().split(":", 1)[1].strip()
 
+    # If neither daemon nor usable interface is functioning, consider it unavailable
     return {
-        "available": True,
+        "available": is_usable,
         "interfaces": wifi_ifaces,
         "primary_interface": primary_iface,
         "backend": backend_type,
         "connected": {
             "ssid": connected_ssid,
-            "bssid": connected_bssid,
             "signal": connected_signal
         } if connected_ssid else None
     }
@@ -233,7 +240,7 @@ def get_wifi_info():
 def wifi_scan(iface=None):
     wifi = get_wifi_info()
     if not wifi["available"]:
-        return {"success": False, "error": "No wireless interface found", "networks": []}
+        return {"success": False, "error": "Wireless is disabled or unavailable", "networks": []}
 
     target_iface = iface or wifi["primary_interface"]
     
@@ -244,7 +251,7 @@ def wifi_scan(iface=None):
     networks = []
 
     # 1. Try iwctl
-    if shutil.which("iwctl"):
+    if shutil.which("iwctl") and wifi.get("backend") == "iwd":
         run_cmd(["iwctl", "station", target_iface, "scan"], timeout=8)
         code, out, _ = run_cmd(["iwctl", "station", target_iface, "get-networks"], timeout=6)
         if code == 0:
@@ -271,7 +278,31 @@ def wifi_scan(iface=None):
                         "connected": is_connected or (wifi.get("connected") and wifi["connected"].get("ssid") == name)
                     })
 
-    # 2. Fallback to iw scan
+    # 2. Try wpa_cli
+    if not networks and shutil.which("wpa_cli") and wifi.get("backend") == "wpa_supplicant":
+        run_cmd(["wpa_cli", "-i", target_iface, "scan"], timeout=5)
+        code, out, _ = run_cmd(["wpa_cli", "-i", target_iface, "scan_results"], timeout=4)
+        if code == 0:
+            for line in out.splitlines()[1:]:
+                parts = line.strip().split("\t")
+                if len(parts) >= 5:
+                    bssid, freq, sig_dbm, flags, ssid = parts[0], parts[1], parts[2], parts[3], parts[4]
+                    if ssid:
+                        sec = "open"
+                        if "WPA" in flags or "RSN" in flags:
+                            sec = "wpa2/wpa3"
+                        try:
+                            sig = max(0, min(100, 2 * (int(sig_dbm) + 100)))
+                        except Exception:
+                            sig = 60
+                        networks.append({
+                            "ssid": ssid,
+                            "security": sec,
+                            "signal": sig,
+                            "connected": bool(wifi.get("connected") and wifi["connected"].get("ssid") == ssid)
+                        })
+
+    # 3. Fallback to iw scan
     if not networks and shutil.which("iw"):
         run_cmd(["iw", "dev", target_iface, "scan"], timeout=6)
         code, out, _ = run_cmd(["iw", "dev", target_iface, "scan", "dump"], timeout=4)
@@ -317,27 +348,23 @@ def wifi_scan(iface=None):
 def wifi_connect(ssid, passphrase=None, iface=None):
     wifi = get_wifi_info()
     if not wifi["available"]:
-        return {"success": False, "error": "No wireless interface"}
+        return {"success": False, "error": "Wireless interface is disabled or unavailable"}
 
     target_iface = iface or wifi["primary_interface"]
 
-    # Ensure link is up
     run_cmd(["ip", "link", "set", target_iface, "up"])
     time.sleep(0.3)
 
-    # 1. Try iwctl
     if shutil.which("iwctl"):
         cmd = ["iwctl", "station", target_iface, "connect", ssid]
         if passphrase:
             cmd.extend(["-P", passphrase])
         code, out, err = run_cmd(cmd, timeout=15)
         if code == 0:
-            # Trigger networkd to get DHCP lease
             run_cmd(["networkctl", "reconfigure", target_iface])
             run_cmd(["networkctl", "renew", target_iface])
             return {"success": True, "message": f"Connected to {ssid}"}
 
-    # 2. Try wpa_cli
     if shutil.which("wpa_cli"):
         code_add, net_id, _ = run_cmd(["wpa_cli", "-i", target_iface, "add_network"])
         if code_add == 0 and net_id.isdigit():
@@ -372,9 +399,7 @@ def wifi_disconnect(iface=None):
     return {"success": False, "error": "No wireless tool available"}
 
 def link_action(action, link_name):
-    # Support: connect, disconnect, reconfigure, renew, up, down
     if action in ("connect", "up"):
-        # Bring link up + trigger networkd to reconfigure and acquire DHCP
         run_cmd(["ip", "link", "set", link_name, "up"])
         run_cmd(["networkctl", "up", link_name])
         time.sleep(0.3)
@@ -384,7 +409,6 @@ def link_action(action, link_name):
         return {"success": True, "action": action, "link": link_name, "message": f"{link_name} connected"}
     
     elif action in ("disconnect", "down"):
-        # Put interface down cleanly
         run_cmd(["networkctl", "down", link_name])
         run_cmd(["ip", "link", "set", link_name, "down"])
         return {"success": True, "action": action, "link": link_name, "message": f"{link_name} disconnected"}
