@@ -2,16 +2,17 @@
 pkgname=plasma-nm-networkd
 pkgver=6.8.2
 pkgrel=1
-pkgdesc="Plasma applet powered by systemd-networkd, drop-in replacement for plasma-nm"
+pkgdesc="Plasma applet powered by systemd-networkd & NetworkManager, drop-in replacement for plasma-nm"
 arch=('any')
 license=('GPL-3.0-or-later')
 depends=(
     'libplasma'
-    'systemd'
     'python'
     'kirigami'
 )
 optdepends=(
+    'networkmanager: For NetworkManager backend support'
+    'systemd: For systemd-networkd backend support'
     'iwd: Intel wireless daemon for Wi-Fi'
     'wpa_supplicant: Alternative Wi-Fi management'
 )

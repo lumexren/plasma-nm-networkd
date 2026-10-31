@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-PLUGIN_ID="org.kde.plasma.networkd"
+PLUGIN_ID="org.kde.plasma.networkmanagement"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PACKAGE_DIR="${SCRIPT_DIR}/package"
 TARGET_DIR="${HOME}/.local/share/plasma/plasmoids/${PLUGIN_ID}"
@@ -20,14 +20,9 @@ if [ -d "${TARGET_DIR}" ]; then
     rm -rf "${TARGET_DIR}"
 fi
 
-if command -v kpackagetool6 >/dev/null 2>&1; then
-    kpackagetool6 --type Plasma/Applet --remove "${PLUGIN_ID}" 2>/dev/null || true
-    kpackagetool6 --type Plasma/Applet --install "${PACKAGE_DIR}"
-else
-    cp -r "${PACKAGE_DIR}" "${TARGET_DIR}"
-fi
+cp -r "${PACKAGE_DIR}" "${TARGET_DIR}"
 
-# Direct drop-in replacement in System Tray configuration
+# Ensure it's in System Tray shownItems
 if [ -f "${PLASMA_CONFIG}" ]; then
     python3 - << 'EOF'
 import re, os
@@ -47,9 +42,6 @@ try:
             items = [x for x in items if x != item]
         return f"{key}={','.join(items)}"
 
-    # Replace plugin entries
-    content = content.replace("plugin=org.kde.plasma.networkmanagement", "plugin=org.kde.plasma.networkd")
-
     lines = content.splitlines()
     new_lines = []
     in_tray_general = False
@@ -64,24 +56,23 @@ try:
 
         if in_tray_general:
             if line.startswith("extraItems="):
-                line = update_tray_list(line, "org.kde.plasma.networkd", add=True)
+                line = update_tray_list(line, "org.kde.plasma.networkmanagement", add=True)
             elif line.startswith("knownItems="):
-                line = update_tray_list(line, "org.kde.plasma.networkd", add=True)
+                line = update_tray_list(line, "org.kde.plasma.networkmanagement", add=True)
             elif line.startswith("shownItems="):
-                line = update_tray_list(line, "org.kde.plasma.networkd", add=True)
-            elif line.startswith("hiddenItems="):
-                line = update_tray_list(line, "org.kde.plasma.networkd", add=False)
+                line = update_tray_list(line, "org.kde.plasma.networkmanagement", add=True)
 
         new_lines.append(line)
 
     with open(config_path, "w", encoding="utf-8") as f:
         f.write("\n".join(new_lines) + "\n")
-    print("==> System Tray config successfully updated (added to shownItems)!")
+    print("==> System Tray config verified!")
 except Exception as e:
     print("Warning updating tray config:", e)
 EOF
 fi
 
 echo "==> Installation complete!"
-echo "==> Plasma System Tray is configured to display '${PLUGIN_ID}' actively."
-echo "==> To apply immediately, run: 'plasmashell --replace &'"
+echo "==> Native drop-in applet '${PLUGIN_ID}' is installed."
+echo "==> Supports both systemd-networkd and NetworkManager seamlessly."
+echo "==> Run 'plasmashell --replace &' to apply immediately."
