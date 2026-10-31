@@ -10,10 +10,14 @@ PLASMA_CONFIG="${HOME}/.config/plasma-org.kde.plasma.desktop-appletsrc"
 echo "==> Building translations..."
 "${SCRIPT_DIR}/build-translations.sh"
 
+echo "==> Building System Settings KCM..."
+"${SCRIPT_DIR}/kcm/build-kcm.sh"
+
 echo "==> Preparing ${PLUGIN_ID}..."
 chmod +x "${PACKAGE_DIR}/contents/scripts/backend.py"
 
 mkdir -p "${HOME}/.local/share/plasma/plasmoids"
+mkdir -p "${HOME}/.local/share/applications"
 
 # Re-install clean package
 if [ -d "${TARGET_DIR}" ]; then
@@ -21,6 +25,14 @@ if [ -d "${TARGET_DIR}" ]; then
 fi
 
 cp -r "${PACKAGE_DIR}" "${TARGET_DIR}"
+cp "${SCRIPT_DIR}/kcm/kcm_networkmanagement.desktop" "${HOME}/.local/share/applications/"
+
+# If passwordless sudo is available, install KCM plugin system-wide immediately
+if sudo -n true 2>/dev/null; then
+    sudo install -Dm755 "${SCRIPT_DIR}/kcm/kcm_networkmanagement.so" /usr/lib/qt6/plugins/plasma/kcms/systemsettings/kcm_networkmanagement.so
+    sudo install -Dm644 "${SCRIPT_DIR}/kcm/kcm_networkmanagement.desktop" /usr/share/applications/kcm_networkmanagement.desktop
+    echo "==> System Settings KCM plugin installed system-wide!"
+fi
 
 # Ensure it's in System Tray shownItems
 if [ -f "${PLASMA_CONFIG}" ]; then
@@ -75,4 +87,6 @@ fi
 echo "==> Installation complete!"
 echo "==> Native drop-in applet '${PLUGIN_ID}' is installed."
 echo "==> Supports both systemd-networkd and NetworkManager seamlessly."
-echo "==> Run 'plasmashell --replace &' to apply immediately."
+echo "==> For System Settings integration, install the Arch package:"
+echo "    sudo pacman -U plasma-nm-networkd-*.pkg.tar.zst"
+echo "==> Run 'plasmashell --replace &' to apply tray changes immediately."

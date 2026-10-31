@@ -1,0 +1,12 @@
+{
+    "KPlugin": {
+        "Description": "Manage and configure network connections",
+        "Description[tr]": "Ağ bağlantılarını yönetin ve yapılandırın",
+        "Icon": "preferences-system-network",
+        "Name": "Wi-Fi & Networking",
+        "Name[tr]": "Wi-Fi ve Ağ"
+    },
+    "X-KDE-ParentApp": "kcontrol",
+    "X-KDE-System-Settings-Parent-Category": "networksettings",
+    "X-KDE-Weight": 10
+}

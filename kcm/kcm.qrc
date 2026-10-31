@@ -1,0 +1,5 @@
+<RCC>
+<qresource prefix="/kcm/kcm_networkmanagement">
+<file alias="main.qml">ui/main.qml</file>
+</qresource>
+</RCC>
