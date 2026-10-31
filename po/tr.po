@@ -12,110 +12,44 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-msgid "Routable"
-msgstr "Erişilebilir"
-
 msgid "Connected"
 msgstr "Bağlı"
 
-msgid "Configured"
-msgstr "Yapılandırıldı"
+msgid "Wired Connection"
+msgstr "Kablolu Bağlantı"
 
-msgid "Configuring"
-msgstr "Yapılandırılıyor"
+msgid "Available Networks"
+msgstr "Kullanılabilir Ağlar"
 
-msgid "Degraded"
-msgstr "Kısıtlı"
+msgid "Other Connections"
+msgstr "Diğer Bağlantılar"
 
-msgid "Carrier"
-msgstr "Sinyal Var"
+msgid "Disconnected"
+msgstr "Bağlantı Kesildi"
 
-msgid "No Carrier"
-msgstr "Taşıyıcı Yok"
+msgid "Open"
+msgstr "Açık"
 
-msgid "Down"
-msgstr "Kapalı"
-
-msgid "Unmanaged"
-msgstr "Yönetilmeyen"
-
-msgid "Active"
-msgstr "Aktif"
-
-msgid "Inactive"
-msgstr "Pasif"
-
-msgid "Online"
-msgstr "Çevrimiçi"
-
-msgid "Offline"
-msgstr "Çevrimdışı"
-
-msgid "GW:"
-msgstr "Ağ Geçidi:"
-
-msgid "Interface is down"
-msgstr "Arayüz kapalı"
-
-msgid "No IP address assigned"
-msgstr "IP adresi atanmamış"
-
-msgid "Turn Off"
-msgstr "Kapat"
-
-msgid "Turn On"
-msgstr "Aç"
-
-msgid "Turn interface off (Down)"
-msgstr "Arayüzü kapat (Down)"
-
-msgid "Turn interface on (Up)"
-msgstr "Arayüzü aç (Up)"
+msgid "Details"
+msgstr "Ayrıntılar"
 
 msgid "Show less"
 msgstr "Daha az göster"
-
-msgid "Show details"
-msgstr "Ayrıntıları göster"
-
-msgid "MAC Address:"
-msgstr "MAC Adresi:"
-
-msgid "MTU:"
-msgstr "MTU:"
-
-msgid "IPv4:"
-msgstr "IPv4:"
-
-msgid "IPv6:"
-msgstr "IPv6:"
-
-msgid "Gateway:"
-msgstr "Ağ Geçidi:"
-
-msgid "DNS Servers:"
-msgstr "DNS Sunucuları:"
-
-msgid "Reconfigure"
-msgstr "Yeniden Yapılandır"
-
-msgid "Renew DHCP"
-msgstr "DHCP Yenile"
-
-msgid "Hidden Network"
-msgstr "Gizli Ağ"
-
-msgid "Open Network"
-msgstr "Açık Ağ"
-
-msgid "%1% Signal"
-msgstr "%%%1 Sinyal"
 
 msgid "Connect"
 msgstr "Bağlan"
 
 msgid "Disconnect"
 msgstr "Bağlantıyı Kes"
+
+msgid "Scan for networks"
+msgstr "Ağları tara"
+
+msgid "Scanning for wireless networks…"
+msgstr "Kablosuz ağlar aranıyor…"
+
+msgid "No networks found. Click the scan button to search."
+msgstr "Ağ bulunamadı. Aramak için tara butonuna tıklayın."
 
 msgid "Wi-Fi Password…"
 msgstr "Wi-Fi Parolası…"
@@ -126,59 +60,32 @@ msgstr "Göster"
 msgid "Join"
 msgstr "Katıl"
 
-msgid "Cancel"
-msgstr "İptal"
+msgid "Hidden Network"
+msgstr "Gizli Ağ"
 
-msgid "systemd-networkd & resolved Management"
-msgstr "systemd-networkd & resolved Yönetimi"
+msgid "IPv4:"
+msgstr "IPv4:"
 
-msgid "Restart network services, reload configuration or flush DNS resolver cache."
-msgstr "Ağ servislerini yeniden başlatın, yapılandırmayı yenileyin veya DNS önbelleğini temizleyin."
+msgid "Gateway:"
+msgstr "Ağ Geçidi:"
+
+msgid "DNS:"
+msgstr "DNS:"
+
+msgid "MAC Address:"
+msgstr "MAC Adresi:"
+
+msgid "Reconfigure"
+msgstr "Yeniden Yapılandır"
+
+msgid "Renew DHCP"
+msgstr "DHCP Yenile"
 
 msgid "Flush DNS Cache"
 msgstr "DNS Önbelleğini Temizle"
 
-msgid "Reload Networkd"
-msgstr "Networkd Yeniden Yükle"
-
-msgid "Restart Networkd"
-msgstr "Networkd Yeniden Başlat"
-
-msgid "Active DNS & Gateways Summary"
-msgstr "Aktif DNS & Ağ Geçitleri Özeti"
-
-msgid "Default Gateway:"
-msgstr "Varsayılan Ağ Geçidi:"
-
-msgid "None"
-msgstr "Yok"
-
-msgid "Systemd Networkd"
-msgstr "Systemd Networkd"
-
 msgid "Refresh status"
 msgstr "Durumu yenile"
-
-msgid "Interfaces"
-msgstr "Arayüzler"
-
-msgid "Wi-Fi"
-msgstr "Wi-Fi"
-
-msgid "DNS & System"
-msgstr "DNS & Sistem"
-
-msgid "Interface: %1 (%2)"
-msgstr "Arayüz: %1 (%2)"
-
-msgid "Scan Networks"
-msgstr "Ağları Tara"
-
-msgid "Scanning wireless networks…"
-msgstr "Kablosuz ağlar taranıyor…"
-
-msgid "No networks found.\nClick 'Scan Networks' above."
-msgstr "Ağ bulunamadı.\nYukarıdaki 'Ağları Tara' butonuna basın."
 
 msgid "%1 Connected"
 msgstr "%1 Bağlı"
@@ -197,36 +104,3 @@ msgstr "IP: %1"
 
 msgid "Gateway: %1"
 msgstr "Ağ Geçidi: %1"
-
-msgid "Wi-Fi scan error: %1"
-msgstr "Wi-Fi tarama hatası: %1"
-
-msgid "Failed to parse Wi-Fi scan output"
-msgstr "Wi-Fi tarama çıktısı okunamadı"
-
-msgid "Operation completed successfully"
-msgstr "İşlem başarıyla tamamlandı"
-
-msgid "Operation failed"
-msgstr "İşlem başarısız oldu"
-
-msgid "Operation completed"
-msgstr "İşlem tamamlandı"
-
-msgid "An error occurred"
-msgstr "Bir hata oluştu"
-
-msgid "Connecting to '%1'…"
-msgstr "'%1' ağına bağlanılıyor…"
-
-msgid "Disconnecting Wi-Fi…"
-msgstr "Wi-Fi bağlantısı kesiliyor…"
-
-msgid "Applying %1 on %2…"
-msgstr "%2 üzerinde %1 işlemi yapılıyor…"
-
-msgid "Running systemd-networkd %1…"
-msgstr "systemd-networkd %1 çalıştırılıyor…"
-
-msgid "Flushing DNS resolver cache…"
-msgstr "DNS çözümleyici önbelleği temizleniyor…"
