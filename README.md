@@ -1,56 +1,42 @@
-# Plasma Networkd (plasma-nm Drop-in Replacement)
+# plasma-nm-networkd
 
-KDE Plasma 6 için **systemd-networkd** tabanlı, resmi `plasma-nm` paketinin sistem düzeyinde **birebir (drop-in) alternatifi** olan modern ve hafif ağ yönetimi eklentisi.
+A lightweight drop-in replacement for KDE Plasma 6's `plasma-nm`, powered by **systemd-networkd** and **NetworkManager** with `iwd` / `wpa_supplicant` support.
 
-Arch Linux sistemlerinde `NetworkManager` gerektiren ağır `plasma-nm` paketini kaldırıp, yerine hiçbir konfigürasyon bozmadan `systemd-networkd` ve `iwd` kullanan bu paketi koyabilirsiniz.
+## Features
 
----
+- **Drop-in Replacement:** Replaces official `plasma-nm` without breaking existing panel widgets or dependencies (`provides=('plasma-nm')`).
+- **Official Look & Feel:** Native Plasma 6 Breeze UI layout for both the system tray plasmoid and System Settings module (`kcm_networkmanagement`).
+- **Dual-Backend Support:** Works out of the box with `systemd-networkd` or `NetworkManager`.
+- **Live Traffic Monitor:** Real-time download and upload speeds.
+- **Smart Wi-Fi Detection:** Automatically discovers `iwd` or `wpa_supplicant`, hiding wireless controls when unavailable.
+- **Passwordless Actions:** Ships with polkit rules for seamless network operations.
 
-## 📦 Arch Linux Drop-in Paket Kurulumu (`plasma-nm` Yerine)
+## Installation
 
-Proje, Arch Linux paket yöneticisi `pacman` ile tam uyumludur (`provides=('plasma-nm')`, `conflicts=('plasma-nm')`, `replaces=('plasma-nm')`).
+### Arch Linux
 
-### 1. Paketi Derleyin ve Kurun:
+Build and install replacing `plasma-nm`:
 
 ```bash
-cd ~/Projects/plasma-networkd
-
-# Paketi oluşturup sistemdeki plasma-nm yerine kurmak için:
+git clone https://codeberg.org/lumexren/plasma-nm-networkd.git -b 6.x
+cd plasma-nm-networkd
 makepkg -si
 ```
-*(veya hazır derlenmiş paketi yükleyin:)*
-```bash
-sudo pacman -U plasma-nm-networkd-6.8.2-1-any.pkg.tar.zst
-```
 
-Bu işlem:
-- Sistemdeki orijinal `plasma-nm` paketini kaldırır.
-- `/usr/share/plasma/plasmoids/org.kde.plasma.networkmanagement` altına bu widget'ı kurar.
-- Türkçe sistem çevirilerini (`/usr/share/locale/tr/LC_MESSAGES/`) otomatik yükler.
-- Şifresiz yönetim için Polkit kuralını (`/usr/share/polkit-1/rules.d/`) sisteme ekler.
-- Masaüstünüzdeki tüm panel ve Sistem Tepsisi (System Tray) girişleri hiçbir ayar yapmadan doğrudan bu widget ile çalışır.
-
-### 2. Değişikliği Uygulayın:
+Apply the changes to your running session:
 
 ```bash
 plasmashell --replace &
 ```
 
----
+## Reverting to Upstream
 
-## 🔄 Orijinal `plasma-nm` Paketine Geri Dönmek İsterseniz:
-
-İstediğiniz zaman tek komutla resmi depodaki `plasma-nm` paketini geri yükleyebilirsiniz:
+To restore the official `plasma-nm` package at any time:
 
 ```bash
 sudo pacman -S plasma-nm
 ```
 
----
+## License
 
-## 🌟 Özellikler
-
-- **Resmi `plasma-nm` Düzeni:** KDE'nin resmi `PlasmaExtras.ExpandableListItem`, `ListSectionHeader` ve `Toolbar` bileşenleriyle birebir aynı görünüm.
-- **Akıllı Donanım Tespiti:** Wi-Fi engelliyse veya kullanılamazsa Wi-Fi bölümlerini gizler, gereksiz boşluk bırakmaz.
-- **systemd-networkd Entegrasyonu:** L3 DHCP ve link yönetimi (`networkctl up/down/reconfigure/renew`).
-- **Kusursuz Dil Desteği:** Plasma sistem dilini (Türkçe / İngilizce) otomatik takip eden yerleşik Gettext altyapısı.
+GPL-3.0-or-later
