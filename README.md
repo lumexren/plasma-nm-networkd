@@ -18,17 +18,17 @@
 
 ## Overview
 
-`plasma-nm-networkd` is a seamless, drop-in replacement package and widget for KDE Plasma 6 (`plasma-nm`). It allows running KDE Plasma without requiring the heavy `NetworkManager` daemon on systems powered by `systemd-networkd` and `iwd` / `wpa_supplicant`, while retaining full compatibility with `NetworkManager` if present.
+`plasma-nm-networkd` is a seamless drop-in replacement for KDE Plasma 6 `plasma-nm`. It allows running KDE Plasma without requiring the heavy `NetworkManager` daemon on systems powered by `systemd-networkd` and `iwd` or `wpa_supplicant`, while retaining full compatibility with `NetworkManager` if present.
 
-It provides both the native system tray applet (`org.kde.plasma.networkmanagement`) and the native System Settings KCM configuration module (`kcm_networkmanagement`), matching upstream KDE Plasma 6 Breeze layout, typography, and UX conventions 1:1.
+It provides both the native system tray applet and the native System Settings module, matching upstream KDE Plasma 6 Breeze layout, typography, and UX conventions 1:1.
 
 ## Features
 
-- **True Drop-in Replacement** - Directly replaces `plasma-nm` without breaking existing desktop panel widgets or system package dependencies (`provides=('plasma-nm')`, `conflicts=('plasma-nm')`, `replaces=('plasma-nm')`).
+- **True Drop-in Replacement** - Directly replaces `plasma-nm` without breaking existing desktop panel widgets or system package dependencies.
 - **Dual Backend Engine** - Automatically detects and operates with `systemd-networkd` or `NetworkManager`.
-- **Identical Breeze UI** - Uses native `PlasmaExtras.ExpandableListItem`, `Kirigami.FormLayout`, and official section headers for a seamless desktop experience.
-- **System Settings Integration** - Includes native C++ KCM module (`kcm_networkmanagement.so`) accessible directly from Plasma System Settings under Networking.
-- **Live Traffic Monitoring** - Real-time calculation and display of download and upload rates (`↓ / ↑`) on both the tray applet and settings page.
+- **Identical Breeze UI** - Uses native Plasma components and official section headers for a seamless desktop experience.
+- **System Settings Integration** - Includes a native C++ KCM module accessible directly from Plasma System Settings under Networking.
+- **Live Traffic Monitoring** - Real-time calculation and display of download and upload rates on both the tray applet and settings page.
 - **Smart Hardware Discovery** - Automatically detects Wi-Fi adapters and hides wireless interfaces and controls when hardware is unavailable or disabled.
 - **Passwordless Actions** - Preconfigured Polkit rules for non-root link state changes, DHCP lease renewal, and DNS cache flushing.
 
