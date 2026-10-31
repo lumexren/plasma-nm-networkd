@@ -357,338 +357,289 @@ Kirigami.Page {
         // ==========================================
         // RIGHT PANE: Details & Configuration View
         // ==========================================
-        QQC2.ScrollView {
+        Item {
             id: rightPanel
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Kirigami.StyleHints.showFramedBackground: true
 
             readonly property var selectedItem: (connectionView.currentIndex >= 0 && connectionView.currentIndex < connectionsModel.count)
                 ? connectionsModel.get(connectionView.currentIndex)
                 : null
 
-            ColumnLayout {
-                width: rightPanel.availableWidth - (Kirigami.Units.largeSpacing * 2)
-                anchors.horizontalCenter: parent.horizontalCenter
-                spacing: Kirigami.Units.largeSpacing
+            QQC2.ScrollView {
+                anchors.fill: parent
+                contentWidth: availableWidth
+                clip: true
 
-                // 1. Connection Header & Actions
-                RowLayout {
-                    Layout.fillWidth: true
+                ColumnLayout {
+                    width: parent.width
                     spacing: Kirigami.Units.largeSpacing
-                    visible: rightPanel.selectedItem !== null
 
-                    Kirigami.Icon {
-                        source: rightPanel.selectedItem ? rightPanel.selectedItem.icon : ""
-                        Layout.preferredWidth: Kirigami.Units.iconSizes.huge
-                        Layout.preferredHeight: Kirigami.Units.iconSizes.huge
-                        Layout.alignment: Qt.AlignVCenter
-                    }
-
-                    ColumnLayout {
+                    // 1. Connection Header & Actions
+                    RowLayout {
                         Layout.fillWidth: true
-                        spacing: Kirigami.Units.smallSpacing
+                        Layout.leftMargin: Kirigami.Units.largeSpacing
+                        Layout.rightMargin: Kirigami.Units.largeSpacing
+                        Layout.topMargin: Kirigami.Units.largeSpacing
+                        spacing: Kirigami.Units.largeSpacing
+                        visible: rightPanel.selectedItem !== null
 
-                        QQC2.Label {
-                            text: rightPanel.selectedItem ? rightPanel.selectedItem.title : ""
-                            font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.3
-                            font.weight: Font.Bold
-                            elide: Text.ElideRight
-                            Layout.fillWidth: true
+                        Kirigami.Icon {
+                            source: rightPanel.selectedItem ? rightPanel.selectedItem.icon : ""
+                            Layout.preferredWidth: Kirigami.Units.iconSizes.huge
+                            Layout.preferredHeight: Kirigami.Units.iconSizes.huge
+                            Layout.alignment: Qt.AlignVCenter
                         }
 
-                        QQC2.Label {
-                            text: {
-                                if (!rightPanel.selectedItem) return "";
-                                const eng = root.backendData.backend || "systemd-networkd";
-                                return rightPanel.selectedItem.statusText + " • " + eng;
-                            }
-                            color: (rightPanel.selectedItem && rightPanel.selectedItem.isConnected)
-                                ? Kirigami.Theme.positiveTextColor
-                                : Kirigami.Theme.disabledTextColor
-                            font.pointSize: Kirigami.Theme.smallFont.pointSize
+                        ColumnLayout {
                             Layout.fillWidth: true
-                        }
-
-                        // Action buttons
-                        RowLayout {
                             spacing: Kirigami.Units.smallSpacing
 
-                            QQC2.Button {
-                                text: (rightPanel.selectedItem && rightPanel.selectedItem.isConnected) ? i18n("Disconnect") : i18n("Connect")
-                                icon.name: (rightPanel.selectedItem && rightPanel.selectedItem.isConnected) ? "network-disconnect" : "network-connect"
-                                onClicked: {
-                                    if (!rightPanel.selectedItem || typeof kcm === "undefined") return;
-                                    if (rightPanel.selectedItem.isConnected) {
-                                        if (rightPanel.selectedItem.type === "wifi") kcm.disconnectWifi();
-                                        else kcm.executeLinkAction("disconnect", rightPanel.selectedItem.name);
-                                    } else {
-                                        if (rightPanel.selectedItem.type === "wifi") {
-                                            if (rightPanel.selectedItem.security && rightPanel.selectedItem.security !== "open" && rightPanel.selectedItem.security !== "none") {
-                                                pwdBox.visible = true;
-                                                wifiPwdInput.forceActiveFocus();
-                                            } else {
-                                                kcm.connectWifi(rightPanel.selectedItem.name, "");
-                                            }
+                            QQC2.Label {
+                                text: rightPanel.selectedItem ? rightPanel.selectedItem.title : ""
+                                font.pointSize: Kirigami.Theme.defaultFont.pointSize * 1.3
+                                font.weight: Font.Bold
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                            }
+
+                            QQC2.Label {
+                                text: {
+                                    if (!rightPanel.selectedItem) return "";
+                                    const eng = root.backendData.backend || "systemd-networkd";
+                                    return rightPanel.selectedItem.statusText + " • " + eng;
+                                }
+                                color: (rightPanel.selectedItem && rightPanel.selectedItem.isConnected)
+                                    ? Kirigami.Theme.positiveTextColor
+                                    : Kirigami.Theme.disabledTextColor
+                                font.pointSize: Kirigami.Theme.smallFont.pointSize
+                                Layout.fillWidth: true
+                            }
+
+                            // Action buttons
+                            Flow {
+                                Layout.fillWidth: true
+                                spacing: Kirigami.Units.smallSpacing
+
+                                QQC2.Button {
+                                    text: (rightPanel.selectedItem && rightPanel.selectedItem.isConnected) ? i18n("Disconnect") : i18n("Connect")
+                                    icon.name: (rightPanel.selectedItem && rightPanel.selectedItem.isConnected) ? "network-disconnect" : "network-connect"
+                                    onClicked: {
+                                        if (!rightPanel.selectedItem || typeof kcm === "undefined") return;
+                                        if (rightPanel.selectedItem.isConnected) {
+                                            if (rightPanel.selectedItem.type === "wifi") kcm.disconnectWifi();
+                                            else kcm.executeLinkAction("disconnect", rightPanel.selectedItem.name);
                                         } else {
-                                            kcm.executeLinkAction("connect", rightPanel.selectedItem.name);
+                                            if (rightPanel.selectedItem.type === "wifi") {
+                                                if (rightPanel.selectedItem.security && rightPanel.selectedItem.security !== "open" && rightPanel.selectedItem.security !== "none") {
+                                                    pwdBox.visible = true;
+                                                    wifiPwdInput.forceActiveFocus();
+                                                } else {
+                                                    kcm.connectWifi(rightPanel.selectedItem.name, "");
+                                                }
+                                            } else {
+                                                kcm.executeLinkAction("connect", rightPanel.selectedItem.name);
+                                            }
+                                        }
+                                    }
+                                }
+
+                                QQC2.Button {
+                                    text: i18n("Reconfigure")
+                                    icon.name: "view-refresh"
+                                    visible: rightPanel.selectedItem && rightPanel.selectedItem.isConnected && rightPanel.selectedItem.type === "ethernet"
+                                    onClicked: {
+                                        if (typeof kcm !== "undefined" && rightPanel.selectedItem) {
+                                            kcm.executeLinkAction("reconfigure", rightPanel.selectedItem.name);
+                                        }
+                                    }
+                                }
+
+                                QQC2.Button {
+                                    text: i18n("Renew IP")
+                                    icon.name: "network-connect"
+                                    visible: rightPanel.selectedItem && rightPanel.selectedItem.isConnected && rightPanel.selectedItem.type === "ethernet"
+                                    onClicked: {
+                                        if (typeof kcm !== "undefined" && rightPanel.selectedItem) {
+                                            kcm.executeLinkAction("renew", rightPanel.selectedItem.name);
                                         }
                                     }
                                 }
                             }
+                        }
+                    }
 
-                            QQC2.Button {
-                                text: i18n("Reconfigure")
-                                icon.name: "view-refresh"
-                                visible: rightPanel.selectedItem && rightPanel.selectedItem.isConnected && rightPanel.selectedItem.type === "ethernet"
-                                onClicked: {
-                                    if (typeof kcm !== "undefined" && rightPanel.selectedItem) {
-                                        kcm.executeLinkAction("reconfigure", rightPanel.selectedItem.name);
-                                    }
-                                }
-                            }
+                    // Inline Wi-Fi Password box if connecting
+                    RowLayout {
+                        id: pwdBox
+                        Layout.fillWidth: true
+                        Layout.leftMargin: Kirigami.Units.largeSpacing
+                        Layout.rightMargin: Kirigami.Units.largeSpacing
+                        visible: false
+                        spacing: Kirigami.Units.smallSpacing
 
-                            QQC2.Button {
-                                text: i18n("Renew IP")
-                                icon.name: "network-connect"
-                                visible: rightPanel.selectedItem && rightPanel.selectedItem.isConnected && rightPanel.selectedItem.type === "ethernet"
-                                onClicked: {
-                                    if (typeof kcm !== "undefined" && rightPanel.selectedItem) {
-                                        kcm.executeLinkAction("renew", rightPanel.selectedItem.name);
-                                    }
+                        QQC2.TextField {
+                            id: wifiPwdInput
+                            Layout.fillWidth: true
+                            placeholderText: i18n("Enter Wi-Fi Password…")
+                            echoMode: showPwdCheck.checked ? TextInput.Normal : TextInput.Password
+                            onAccepted: connectBtn.clicked()
+                        }
+
+                        QQC2.ToolButton {
+                            id: showPwdCheck
+                            checkable: true
+                            icon.name: checked ? "visibility" : "hint"
+                            QQC2.ToolTip.text: i18n("Show password")
+                            QQC2.ToolTip.visible: hovered
+                        }
+
+                        QQC2.Button {
+                            id: connectBtn
+                            text: i18n("Connect")
+                            icon.name: "network-connect"
+                            enabled: wifiPwdInput.text.length >= 8 || (rightPanel.selectedItem && rightPanel.selectedItem.security === "open")
+                            onClicked: {
+                                if (typeof kcm !== "undefined" && rightPanel.selectedItem) {
+                                    kcm.connectWifi(rightPanel.selectedItem.name, wifiPwdInput.text);
+                                    wifiPwdInput.text = "";
+                                    pwdBox.visible = false;
                                 }
                             }
                         }
-                    }
-                }
 
-                // Inline Wi-Fi Password box if connecting
-                RowLayout {
-                    id: pwdBox
-                    Layout.fillWidth: true
-                    visible: false
-                    spacing: Kirigami.Units.smallSpacing
-
-                    QQC2.TextField {
-                        id: wifiPwdInput
-                        Layout.fillWidth: true
-                        placeholderText: i18n("Enter Wi-Fi Password…")
-                        echoMode: showPwdCheck.checked ? TextInput.Normal : TextInput.Password
-                        onAccepted: connectBtn.clicked()
-                    }
-
-                    QQC2.ToolButton {
-                        id: showPwdCheck
-                        checkable: true
-                        icon.name: checked ? "visibility" : "hint"
-                        QQC2.ToolTip.text: i18n("Show password")
-                        QQC2.ToolTip.visible: hovered
-                    }
-
-                    QQC2.Button {
-                        id: connectBtn
-                        text: i18n("Connect")
-                        icon.name: "network-connect"
-                        enabled: wifiPwdInput.text.length >= 8 || (rightPanel.selectedItem && rightPanel.selectedItem.security === "open")
-                        onClicked: {
-                            if (typeof kcm !== "undefined" && rightPanel.selectedItem) {
-                                kcm.connectWifi(rightPanel.selectedItem.name, wifiPwdInput.text);
+                        QQC2.Button {
+                            text: i18n("Cancel")
+                            onClicked: {
                                 wifiPwdInput.text = "";
                                 pwdBox.visible = false;
                             }
                         }
                     }
 
-                    QQC2.Button {
-                        text: i18n("Cancel")
-                        onClicked: {
-                            wifiPwdInput.text = "";
-                            pwdBox.visible = false;
-                        }
-                    }
-                }
-
-                Kirigami.Separator { Layout.fillWidth: true; visible: rightPanel.selectedItem !== null }
-
-                // 2. Details Grid (like plasma-nm details view)
-                GridLayout {
-                    Layout.fillWidth: true
-                    columns: 2
-                    rowSpacing: Kirigami.Units.smallSpacing
-                    columnSpacing: Kirigami.Units.largeSpacing * 2
-                    visible: rightPanel.selectedItem !== null
-
-                    // Interface
-                    QQC2.Label {
-                        text: i18n("Interface:")
-                        color: Kirigami.Theme.disabledTextColor
-                        font.weight: Font.DemiBold
-                        horizontalAlignment: Text.AlignRight
-                        Layout.preferredWidth: Kirigami.Units.gridUnit * 7
-                    }
-                    QQC2.Label {
-                        text: rightPanel.selectedItem ? rightPanel.selectedItem.name : ""
-                        font.family: "monospace"
+                    Kirigami.Separator {
+                        Layout.fillWidth: true
+                        Layout.leftMargin: Kirigami.Units.largeSpacing
+                        Layout.rightMargin: Kirigami.Units.largeSpacing
+                        visible: rightPanel.selectedItem !== null
                     }
 
-                    // Speed (if connected)
-                    QQC2.Label {
-                        text: i18n("Current Speed:")
-                        color: Kirigami.Theme.disabledTextColor
-                        font.weight: Font.DemiBold
-                        horizontalAlignment: Text.AlignRight
-                        visible: rightPanel.selectedItem && rightPanel.selectedItem.isConnected
-                        Layout.preferredWidth: Kirigami.Units.gridUnit * 7
-                    }
-                    QQC2.Label {
-                        text: rightPanel.selectedItem ? rightPanel.selectedItem.speed_text : ""
-                        font.family: "monospace"
-                        color: Kirigami.Theme.positiveTextColor
-                        visible: rightPanel.selectedItem && rightPanel.selectedItem.isConnected
-                    }
-
-                    // IPv4 Address
-                    QQC2.Label {
-                        text: i18n("IPv4 Address:")
-                        color: Kirigami.Theme.disabledTextColor
-                        font.weight: Font.DemiBold
-                        horizontalAlignment: Text.AlignRight
-                        visible: rightPanel.selectedItem && Boolean(rightPanel.selectedItem.ipv4_all)
-                        Layout.preferredWidth: Kirigami.Units.gridUnit * 7
-                    }
-                    RowLayout {
-                        spacing: Kirigami.Units.smallSpacing
-                        visible: rightPanel.selectedItem && Boolean(rightPanel.selectedItem.ipv4_all)
+                    // 2. Details using Kirigami.FormLayout
+                    Kirigami.FormLayout {
+                        Layout.fillWidth: true
+                        Layout.leftMargin: Kirigami.Units.largeSpacing
+                        Layout.rightMargin: Kirigami.Units.largeSpacing
+                        visible: rightPanel.selectedItem !== null
 
                         QQC2.Label {
-                            text: rightPanel.selectedItem ? rightPanel.selectedItem.ipv4_all : ""
+                            Kirigami.FormData.label: i18n("Interface:")
+                            text: rightPanel.selectedItem ? rightPanel.selectedItem.name : ""
                             font.family: "monospace"
                         }
-                        QQC2.ToolButton {
-                            icon.name: "edit-copy"
-                            display: QQC2.AbstractButton.IconOnly
-                            QQC2.ToolTip.text: i18n("Copy to clipboard")
-                            QQC2.ToolTip.visible: hovered
-                            onClicked: clipboard.content = rightPanel.selectedItem ? rightPanel.selectedItem.ip : ""
-                        }
-                    }
-
-                    // Gateway
-                    QQC2.Label {
-                        text: i18n("Default Gateway:")
-                        color: Kirigami.Theme.disabledTextColor
-                        font.weight: Font.DemiBold
-                        horizontalAlignment: Text.AlignRight
-                        visible: rightPanel.selectedItem && Boolean(rightPanel.selectedItem.gateway)
-                        Layout.preferredWidth: Kirigami.Units.gridUnit * 7
-                    }
-                    RowLayout {
-                        spacing: Kirigami.Units.smallSpacing
-                        visible: rightPanel.selectedItem && Boolean(rightPanel.selectedItem.gateway)
 
                         QQC2.Label {
-                            text: rightPanel.selectedItem ? rightPanel.selectedItem.gateway : ""
+                            Kirigami.FormData.label: i18n("Current Speed:")
+                            text: rightPanel.selectedItem ? rightPanel.selectedItem.speed_text : ""
                             font.family: "monospace"
+                            color: Kirigami.Theme.positiveTextColor
+                            visible: rightPanel.selectedItem && rightPanel.selectedItem.isConnected
                         }
-                        QQC2.ToolButton {
-                            icon.name: "edit-copy"
-                            display: QQC2.AbstractButton.IconOnly
-                            QQC2.ToolTip.text: i18n("Copy to clipboard")
-                            QQC2.ToolTip.visible: hovered
-                            onClicked: clipboard.content = rightPanel.selectedItem ? rightPanel.selectedItem.gateway : ""
-                        }
-                    }
 
-                    // DNS
-                    QQC2.Label {
-                        text: i18n("DNS Servers:")
-                        color: Kirigami.Theme.disabledTextColor
-                        font.weight: Font.DemiBold
-                        horizontalAlignment: Text.AlignRight
-                        visible: rightPanel.selectedItem && Boolean(rightPanel.selectedItem.dns)
-                        Layout.preferredWidth: Kirigami.Units.gridUnit * 7
-                    }
-                    RowLayout {
-                        spacing: Kirigami.Units.smallSpacing
-                        visible: rightPanel.selectedItem && Boolean(rightPanel.selectedItem.dns)
+                        RowLayout {
+                            Kirigami.FormData.label: i18n("IPv4 Address:")
+                            visible: rightPanel.selectedItem && Boolean(rightPanel.selectedItem.ipv4_all)
+                            spacing: Kirigami.Units.smallSpacing
+
+                            QQC2.Label {
+                                text: rightPanel.selectedItem ? rightPanel.selectedItem.ipv4_all : ""
+                                font.family: "monospace"
+                            }
+                            QQC2.ToolButton {
+                                icon.name: "edit-copy"
+                                display: QQC2.AbstractButton.IconOnly
+                                QQC2.ToolTip.text: i18n("Copy to clipboard")
+                                QQC2.ToolTip.visible: hovered
+                                onClicked: clipboard.content = rightPanel.selectedItem ? rightPanel.selectedItem.ip : ""
+                            }
+                        }
+
+                        RowLayout {
+                            Kirigami.FormData.label: i18n("Default Gateway:")
+                            visible: rightPanel.selectedItem && Boolean(rightPanel.selectedItem.gateway)
+                            spacing: Kirigami.Units.smallSpacing
+
+                            QQC2.Label {
+                                text: rightPanel.selectedItem ? rightPanel.selectedItem.gateway : ""
+                                font.family: "monospace"
+                            }
+                            QQC2.ToolButton {
+                                icon.name: "edit-copy"
+                                display: QQC2.AbstractButton.IconOnly
+                                QQC2.ToolTip.text: i18n("Copy to clipboard")
+                                QQC2.ToolTip.visible: hovered
+                                onClicked: clipboard.content = rightPanel.selectedItem ? rightPanel.selectedItem.gateway : ""
+                            }
+                        }
+
+                        RowLayout {
+                            Kirigami.FormData.label: i18n("DNS Servers:")
+                            visible: rightPanel.selectedItem && Boolean(rightPanel.selectedItem.dns)
+                            spacing: Kirigami.Units.smallSpacing
+
+                            QQC2.Label {
+                                text: rightPanel.selectedItem ? rightPanel.selectedItem.dns : ""
+                                font.family: "monospace"
+                            }
+                            QQC2.ToolButton {
+                                icon.name: "edit-copy"
+                                display: QQC2.AbstractButton.IconOnly
+                                QQC2.ToolTip.text: i18n("Copy to clipboard")
+                                QQC2.ToolTip.visible: hovered
+                                onClicked: clipboard.content = rightPanel.selectedItem ? rightPanel.selectedItem.dns : ""
+                            }
+                        }
+
+                        RowLayout {
+                            Kirigami.FormData.label: i18n("Hardware (MAC):")
+                            visible: rightPanel.selectedItem && Boolean(rightPanel.selectedItem.mac)
+                            spacing: Kirigami.Units.smallSpacing
+
+                            QQC2.Label {
+                                text: rightPanel.selectedItem ? rightPanel.selectedItem.mac : ""
+                                font.family: "monospace"
+                            }
+                            QQC2.ToolButton {
+                                icon.name: "edit-copy"
+                                display: QQC2.AbstractButton.IconOnly
+                                QQC2.ToolTip.text: i18n("Copy to clipboard")
+                                QQC2.ToolTip.visible: hovered
+                                onClicked: clipboard.content = rightPanel.selectedItem ? rightPanel.selectedItem.mac : ""
+                            }
+                        }
 
                         QQC2.Label {
-                            text: rightPanel.selectedItem ? rightPanel.selectedItem.dns : ""
+                            Kirigami.FormData.label: i18n("MTU:")
+                            text: rightPanel.selectedItem ? rightPanel.selectedItem.mtu.toString() : ""
                             font.family: "monospace"
+                            visible: rightPanel.selectedItem && Boolean(rightPanel.selectedItem.mtu)
                         }
-                        QQC2.ToolButton {
-                            icon.name: "edit-copy"
-                            display: QQC2.AbstractButton.IconOnly
-                            QQC2.ToolTip.text: i18n("Copy to clipboard")
-                            QQC2.ToolTip.visible: hovered
-                            onClicked: clipboard.content = rightPanel.selectedItem ? rightPanel.selectedItem.dns : ""
-                        }
-                    }
-
-                    // Hardware MAC
-                    QQC2.Label {
-                        text: i18n("Hardware (MAC):")
-                        color: Kirigami.Theme.disabledTextColor
-                        font.weight: Font.DemiBold
-                        horizontalAlignment: Text.AlignRight
-                        visible: rightPanel.selectedItem && Boolean(rightPanel.selectedItem.mac)
-                        Layout.preferredWidth: Kirigami.Units.gridUnit * 7
-                    }
-                    RowLayout {
-                        spacing: Kirigami.Units.smallSpacing
-                        visible: rightPanel.selectedItem && Boolean(rightPanel.selectedItem.mac)
 
                         QQC2.Label {
-                            text: rightPanel.selectedItem ? rightPanel.selectedItem.mac : ""
-                            font.family: "monospace"
-                        }
-                        QQC2.ToolButton {
-                            icon.name: "edit-copy"
-                            display: QQC2.AbstractButton.IconOnly
-                            QQC2.ToolTip.text: i18n("Copy to clipboard")
-                            QQC2.ToolTip.visible: hovered
-                            onClicked: clipboard.content = rightPanel.selectedItem ? rightPanel.selectedItem.mac : ""
+                            Kirigami.FormData.label: i18n("Security:")
+                            text: (rightPanel.selectedItem && rightPanel.selectedItem.security) ? rightPanel.selectedItem.security.toUpperCase() : i18n("Open")
+                            visible: rightPanel.selectedItem && rightPanel.selectedItem.type === "wifi"
                         }
                     }
 
-                    // MTU
-                    QQC2.Label {
-                        text: i18n("MTU:")
-                        color: Kirigami.Theme.disabledTextColor
-                        font.weight: Font.DemiBold
-                        horizontalAlignment: Text.AlignRight
-                        visible: rightPanel.selectedItem && Boolean(rightPanel.selectedItem.mtu)
-                        Layout.preferredWidth: Kirigami.Units.gridUnit * 7
+                    // Placeholder when no item is selected
+                    Kirigami.PlaceholderMessage {
+                        Layout.fillWidth: true
+                        Layout.fillHeight: true
+                        visible: rightPanel.selectedItem === null
+                        icon.name: "preferences-system-network"
+                        text: i18n("Select a connection")
+                        explanation: i18n("Select a network from the left to view and manage its details.")
                     }
-                    QQC2.Label {
-                        text: rightPanel.selectedItem ? rightPanel.selectedItem.mtu.toString() : ""
-                        font.family: "monospace"
-                        visible: rightPanel.selectedItem && Boolean(rightPanel.selectedItem.mtu)
-                    }
-
-                    // Security (for Wi-Fi)
-                    QQC2.Label {
-                        text: i18n("Security:")
-                        color: Kirigami.Theme.disabledTextColor
-                        font.weight: Font.DemiBold
-                        horizontalAlignment: Text.AlignRight
-                        visible: rightPanel.selectedItem && rightPanel.selectedItem.type === "wifi"
-                        Layout.preferredWidth: Kirigami.Units.gridUnit * 7
-                    }
-                    QQC2.Label {
-                        text: (rightPanel.selectedItem && rightPanel.selectedItem.security) ? rightPanel.selectedItem.security.toUpperCase() : i18n("Open")
-                        visible: rightPanel.selectedItem && rightPanel.selectedItem.type === "wifi"
-                    }
-                }
-
-                // Placeholder when no item is selected
-                Kirigami.PlaceholderMessage {
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    visible: rightPanel.selectedItem === null
-                    icon.name: "preferences-system-network"
-                    text: i18n("Select a connection")
-                    explanation: i18n("Select a network from the left to view and manage its details.")
                 }
             }
         }
