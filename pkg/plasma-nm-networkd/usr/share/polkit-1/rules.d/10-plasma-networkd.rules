@@ -1,0 +1,18 @@
+/*
+ * Allow members of the wheel/sudo group to manage systemd-networkd, systemd-resolved and iwd
+ * without a password prompt from within the Plasma widget.
+ * 
+ * To install:
+ *   sudo cp 10-plasma-networkd.rules /etc/polkit-1/rules.d/
+ */
+
+polkit.addRule(function(action, subject) {
+    if (subject.isInGroup("wheel") || subject.isInGroup("sudo")) {
+        if (action.id.indexOf("org.freedesktop.network1.") === 0 ||
+            action.id.indexOf("org.freedesktop.resolve1.") === 0 ||
+            action.id.indexOf("org.freedesktop.iwd.") === 0 ||
+            action.id === "org.freedesktop.systemd1.manage-units") {
+            return polkit.Result.YES;
+        }
+    }
+});
