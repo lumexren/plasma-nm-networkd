@@ -15,26 +15,20 @@ msgstr ""
 msgid "Connected"
 msgstr "Bağlı"
 
-msgid "Wired Connection"
-msgstr "Kablolu Bağlantı"
+msgid "Available"
+msgstr "Kullanılabilir"
 
-msgid "Available Networks"
-msgstr "Kullanılabilir Ağlar"
-
-msgid "Other Connections"
-msgstr "Diğer Bağlantılar"
+msgid "Wired connection"
+msgstr "Kablolu bağlantı"
 
 msgid "Disconnected"
-msgstr "Bağlantı Kesildi"
+msgstr "Bağlantı kesildi"
+
+msgid "Cable unplugged"
+msgstr "Kablo takılı değil"
 
 msgid "Open"
 msgstr "Açık"
-
-msgid "Details"
-msgstr "Ayrıntılar"
-
-msgid "Show less"
-msgstr "Daha az göster"
 
 msgid "Connect"
 msgstr "Bağlan"
@@ -42,26 +36,32 @@ msgstr "Bağlan"
 msgid "Disconnect"
 msgstr "Bağlantıyı Kes"
 
+msgid "Search…"
+msgstr "Ara…"
+
+msgid "Enable Wi-Fi"
+msgstr "Wi-Fi'ı Etkinleştir"
+
 msgid "Scan for networks"
 msgstr "Ağları tara"
 
-msgid "Scanning for wireless networks…"
-msgstr "Kablosuz ağlar aranıyor…"
+msgid "Flush DNS Cache"
+msgstr "DNS Önbelleğini Temizle"
 
-msgid "No networks found. Click the scan button to search."
-msgstr "Ağ bulunamadı. Aramak için tara butonuna tıklayın."
+msgid "Password…"
+msgstr "Parola…"
 
-msgid "Wi-Fi Password…"
-msgstr "Wi-Fi Parolası…"
-
-msgid "Show"
-msgstr "Göster"
-
-msgid "Join"
-msgstr "Katıl"
+msgid "Show password"
+msgstr "Parolayı göster"
 
 msgid "Hidden Network"
 msgstr "Gizli Ağ"
+
+msgid "No matches"
+msgstr "Eşleşme yok"
+
+msgid "No available connections"
+msgstr "Kullanılabilir bağlantı yok"
 
 msgid "IPv4:"
 msgstr "IPv4:"
@@ -72,17 +72,14 @@ msgstr "Ağ Geçidi:"
 msgid "DNS:"
 msgstr "DNS:"
 
-msgid "MAC Address:"
-msgstr "MAC Adresi:"
+msgid "Hardware address:"
+msgstr "Donanım adresi:"
 
 msgid "Reconfigure"
 msgstr "Yeniden Yapılandır"
 
-msgid "Renew DHCP"
-msgstr "DHCP Yenile"
-
-msgid "Flush DNS Cache"
-msgstr "DNS Önbelleğini Temizle"
+msgid "Renew IP"
+msgstr "IP Yenile"
 
 msgid "Refresh status"
 msgstr "Durumu yenile"
