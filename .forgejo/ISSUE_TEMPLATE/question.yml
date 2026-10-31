@@ -1,0 +1,23 @@
+name: ❓ General / Question
+description: Ask a question or request clarification about plasma-nm-networkd
+title: "[Question] "
+labels: ["Question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Let us know what questions or clarifications you have:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: What would you like to know or discuss?
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Any relevant background, setup details, or attempts made
+    validations:
+      required: false
