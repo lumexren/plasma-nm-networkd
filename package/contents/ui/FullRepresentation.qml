@@ -22,13 +22,25 @@ Item {
     readonly property var backendData: (plasmoidItem && plasmoidItem.backendData) ? plasmoidItem.backendData : ({})
     readonly property var wifi: backendData.wifi || ({ available: false })
 
-    // Build real plasma-nm unified model
-    readonly property var connectionsList: {
-        const list = [];
+    property var expandedItems: ({})
+    function isItemExpanded(key) {
+        return Boolean(expandedItems[key]);
+    }
+    function setItemExpanded(key, val) {
+        expandedItems[key] = val;
+    }
+
+    ListModel {
+        id: connectionsModel
+    }
+
+    function updateConnectionsModel() {
         const search = toolbar.searchText.toLowerCase().trim();
+        const links = root.backendData.links || [];
+        const wifiNets = (root.plasmoidItem && root.plasmoidItem.wifiNetworks) ? root.plasmoidItem.wifiNetworks : [];
+        const targetList = [];
 
         // 1. Connected Networks (Wired or Wireless)
-        const links = root.backendData.links || [];
         for (let i = 0; i < links.length; i++) {
             const l = links[i];
             if (l.type === "bridge" || l.name === "lo") continue;
@@ -38,26 +50,29 @@ Item {
                 const title = (l.type === "ether" ? i18n("Wired connection") : l.name);
                 if (search && !title.toLowerCase().includes(search)) continue;
 
-                list.push({
+                targetList.push({
+                    key: "conn_" + l.name,
                     section: i18n("Connected"),
                     type: l.type === "wlan" ? "wifi" : "ethernet",
                     name: l.name,
                     title: title,
                     icon: l.type === "wlan" ? "network-wireless-connected-100" : "network-wired-activated",
                     isConnected: true,
-                    ip: l.ipv4[0],
-                    gateway: l.gateway,
-                    dns: l.dns,
-                    mac: l.mac,
-                    mtu: l.mtu,
-                    rx_bytes: l.rx_bytes || 0,
-                    tx_bytes: l.tx_bytes || 0
+                    ip: l.ipv4[0] || "",
+                    gateway: l.gateway || "",
+                    dns: (l.dns && l.dns.join(", ")) || "",
+                    mac: l.mac || "",
+                    mtu: l.mtu || 1500,
+                    rx_speed: l.rx_speed || 0,
+                    tx_speed: l.tx_speed || 0,
+                    security: "",
+                    signal: 100,
+                    statusText: ""
                 });
             }
         }
 
         // 2. Available Wi-Fi Networks
-        const wifiNets = (root.plasmoidItem && root.plasmoidItem.wifiNetworks) ? root.plasmoidItem.wifiNetworks : [];
         for (let j = 0; j < wifiNets.length; j++) {
             const w = wifiNets[j];
             if (w.connected) continue;
@@ -72,15 +87,24 @@ Item {
             else if (sig >= 40) sigIcon = "network-wireless-signal-ok";
             else if (sig >= 20) sigIcon = "network-wireless-signal-weak";
 
-            list.push({
+            targetList.push({
+                key: "wifi_" + ssid,
                 section: i18n("Available"),
                 type: "wifi",
                 name: ssid,
                 title: ssid,
                 icon: sigIcon,
                 isConnected: false,
+                ip: "",
+                gateway: "",
+                dns: "",
+                mac: "",
+                mtu: 1500,
+                rx_speed: 0,
+                tx_speed: 0,
                 security: w.security || "open",
-                signal: sig
+                signal: sig,
+                statusText: ""
             });
         }
 
@@ -93,27 +117,86 @@ Item {
                 const title = (l.type === "ether" ? i18n("Wired connection") : l.name);
                 if (search && !title.toLowerCase().includes(search)) continue;
 
-                list.push({
+                targetList.push({
+                    key: "wire_" + l.name,
                     section: i18n("Available"),
                     type: "ethernet",
                     name: l.name,
                     title: title,
                     icon: "network-wired",
                     isConnected: false,
-                    statusText: l.state === "no-carrier" ? i18n("Cable unplugged") : i18n("Disconnected"),
-                    mac: l.mac
+                    ip: "",
+                    gateway: "",
+                    dns: "",
+                    mac: l.mac || "",
+                    mtu: l.mtu || 1500,
+                    rx_speed: 0,
+                    tx_speed: 0,
+                    security: "",
+                    signal: 0,
+                    statusText: l.state === "no-carrier" ? i18n("Cable unplugged") : i18n("Disconnected")
                 });
             }
         }
 
-        return list;
+        // Remove obsolete entries
+        for (let m = connectionsModel.count - 1; m >= 0; m--) {
+            const k = connectionsModel.get(m).key;
+            let found = false;
+            for (let t = 0; t < targetList.length; t++) {
+                if (targetList[t].key === k) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) connectionsModel.remove(m);
+        }
+
+        // Synchronize in-place or append new entries
+        for (let t = 0; t < targetList.length; t++) {
+            const target = targetList[t];
+            let existingIdx = -1;
+            for (let m = 0; m < connectionsModel.count; m++) {
+                if (connectionsModel.get(m).key === target.key) {
+                    existingIdx = m;
+                    break;
+                }
+            }
+
+            if (existingIdx !== -1) {
+                for (let prop in target) {
+                    if (connectionsModel.get(existingIdx)[prop] !== target[prop]) {
+                        connectionsModel.setProperty(existingIdx, prop, target[prop]);
+                    }
+                }
+            } else {
+                if (t < connectionsModel.count) {
+                    connectionsModel.insert(t, target);
+                } else {
+                    connectionsModel.append(target);
+                }
+            }
+        }
+    }
+
+    onBackendDataChanged: updateConnectionsModel()
+
+    Connections {
+        target: root.plasmoidItem || null
+        function onWifiNetworksChanged() {
+            root.updateConnectionsModel()
+        }
+    }
+
+    Component.onCompleted: {
+        updateConnectionsModel()
     }
 
     ColumnLayout {
         anchors.fill: parent
         spacing: Kirigami.Units.smallSpacing
 
-        // 1. TOP TOOLBAR (Wi-Fi switch, search field, scan button, flush DNS)
+        // 1. TOP TOOLBAR (Wi-Fi switch, search field, scan button, flush DNS, configure)
         Toolbar {
             id: toolbar
             Layout.fillWidth: true
@@ -123,6 +206,8 @@ Item {
 
             wifiAvailable: Boolean(root.wifi && root.wifi.available)
             wifiEnabled: Boolean(root.wifi && root.wifi.available)
+
+            onSearchTextChanged: root.updateConnectionsModel()
 
             onToggleWifi: enabled => {
                 const iface = (root.wifi && root.wifi.primary_interface) ? root.wifi.primary_interface : "wlan0";
@@ -175,7 +260,7 @@ Item {
                 spacing: 0
                 boundsBehavior: Flickable.StopAtBounds
 
-                model: root.connectionsList
+                model: connectionsModel
 
                 section.property: "section"
                 section.delegate: PlasmaExtras.ListSectionHeader {
@@ -185,7 +270,26 @@ Item {
 
                 delegate: ConnectionItem {
                     width: listView.width
-                    itemData: modelData
+                    fullRepresentation: root
+                    itemKey: model.key
+                    itemData: ({
+                        key: model.key,
+                        type: model.type,
+                        name: model.name,
+                        title: model.title,
+                        icon: model.icon,
+                        isConnected: model.isConnected,
+                        ip: model.ip,
+                        gateway: model.gateway,
+                        dns: model.dns ? model.dns.split(", ") : [],
+                        mac: model.mac,
+                        mtu: model.mtu,
+                        rx_speed: model.rx_speed,
+                        tx_speed: model.tx_speed,
+                        security: model.security,
+                        signal: model.signal,
+                        statusText: model.statusText
+                    })
 
                     onConnectRequested: (type, name, password) => {
                         if (root.plasmoidItem) {

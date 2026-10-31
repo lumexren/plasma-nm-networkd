@@ -79,6 +79,9 @@ msgstr "Kullanılabilir bağlantı yok"
 msgid "IPv4:"
 msgstr "IPv4:"
 
+msgid "Speed:"
+msgstr "Hız:"
+
 msgid "Gateway:"
 msgstr "Ağ Geçidi:"
 

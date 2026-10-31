@@ -26,6 +26,7 @@ PlasmoidItem {
         links: [],
         wifi: { available: false, interfaces: [] }
     })
+    property var trafficStats: ({})
 
     readonly property string calculatedIcon: {
         if (!backendData.online) {
@@ -101,7 +102,34 @@ PlasmoidItem {
             // Handle periodic status check
             if (sourceName.indexOf("status") !== -1) {
                 try {
-                    root.backendData = JSON.parse(stdout);
+                    const parsed = JSON.parse(stdout);
+                    const now = Date.now();
+                    const links = parsed.links || [];
+                    for (let i = 0; i < links.length; i++) {
+                        const l = links[i];
+                        const prev = root.trafficStats[l.name];
+                        if (prev && prev.timestamp && now > prev.timestamp && l.rx_bytes >= prev.rx_bytes && l.tx_bytes >= prev.tx_bytes) {
+                            const dt = (now - prev.timestamp) / 1000.0;
+                            if (dt > 0.4) {
+                                l.rx_speed = Math.round((l.rx_bytes - prev.rx_bytes) / dt);
+                                l.tx_speed = Math.round((l.tx_bytes - prev.tx_bytes) / dt);
+                            } else {
+                                l.rx_speed = prev.rx_speed || 0;
+                                l.tx_speed = prev.tx_speed || 0;
+                            }
+                        } else {
+                            l.rx_speed = 0;
+                            l.tx_speed = 0;
+                        }
+                        root.trafficStats[l.name] = {
+                            rx_bytes: l.rx_bytes,
+                            tx_bytes: l.tx_bytes,
+                            timestamp: now,
+                            rx_speed: l.rx_speed,
+                            tx_speed: l.tx_speed
+                        };
+                    }
+                    root.backendData = parsed;
                 } catch (e) {
                     console.warn("plasma-networkd JSON parse error:", e);
                 }

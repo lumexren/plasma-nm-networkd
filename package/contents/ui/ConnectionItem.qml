@@ -11,6 +11,9 @@ PlasmaExtras.ExpandableListItem {
     id: root
 
     property var itemData: ({})
+    property var fullRepresentation: null
+    property string itemKey: ""
+
     signal connectRequested(string type, string name, string password)
     signal disconnectRequested(string type, string name)
     signal actionRequested(string action, string name)
@@ -20,53 +23,43 @@ PlasmaExtras.ExpandableListItem {
     readonly property bool isWifi: itemData.type === "wifi"
     readonly property bool isSecured: Boolean(itemData.security && itemData.security !== "open" && itemData.security !== "none")
 
-    property real rxSpeed: 0
-    property real txSpeed: 0
-    property double prevRxBytes: 0
-    property double prevTxBytes: 0
-    property double lastBytesTimestamp: 0
-
-    onItemDataChanged: {
-        if (isConnected && itemData.rx_bytes !== undefined && itemData.tx_bytes !== undefined) {
-            const now = Date.now();
-            if (prevRxBytes > 0 && lastBytesTimestamp > 0 && now > lastBytesTimestamp) {
-                const dt = (now - lastBytesTimestamp) / 1000.0;
-                if (dt > 0.5) {
-                    const deltaRx = Math.max(0, itemData.rx_bytes - prevRxBytes);
-                    const deltaTx = Math.max(0, itemData.tx_bytes - prevTxBytes);
-                    rxSpeed = deltaRx / dt;
-                    txSpeed = deltaTx / dt;
-                }
-            }
-            prevRxBytes = itemData.rx_bytes;
-            prevTxBytes = itemData.tx_bytes;
-            lastBytesTimestamp = now;
-        }
-    }
-
     icon: itemData.icon || (isWifi ? "network-wireless" : "network-wired")
     title: itemData.title || ""
     subtitle: {
         if (isConnected) {
-            const speedStr = (rxSpeed > 0 || txSpeed > 0)
-                ? i18nc("Download and upload rates in some unit per second", "↓ %1/s, ↑ %2/s",
-                    KCoreAddons.Format.formatByteSize(rxSpeed),
-                    KCoreAddons.Format.formatByteSize(txSpeed))
-                : "";
-            if (itemData.ip && speedStr) {
+            const rx = itemData.rx_speed || 0;
+            const tx = itemData.tx_speed || 0;
+            const speedStr = i18nc("Download and upload rates in some unit per second", "↓ %1/s, ↑ %2/s",
+                KCoreAddons.Format.formatByteSize(rx),
+                KCoreAddons.Format.formatByteSize(tx));
+            if (itemData.ip) {
                 return itemData.ip + " • " + speedStr;
-            } else if (itemData.ip) {
-                return itemData.ip;
-            } else if (speedStr) {
-                return speedStr;
             }
-            return i18n("Connected");
+            return speedStr;
         }
         if (isWifi) {
             const secStr = isSecured ? itemData.security.toUpperCase() : i18n("Open");
             return secStr + " • %" + (itemData.signal || 50);
         }
         return itemData.statusText || "";
+    }
+
+    onItemExpanded: {
+        if (fullRepresentation && itemKey) {
+            fullRepresentation.setItemExpanded(itemKey, true);
+        }
+    }
+
+    onItemCollapsed: {
+        if (fullRepresentation && itemKey) {
+            fullRepresentation.setItemExpanded(itemKey, false);
+        }
+    }
+
+    Component.onCompleted: {
+        if (fullRepresentation && itemKey && fullRepresentation.isItemExpanded(itemKey)) {
+            expand();
+        }
     }
 
     contextualActions: [
@@ -149,6 +142,21 @@ PlasmaExtras.ExpandableListItem {
                 columns: 2
                 rowSpacing: 2
                 columnSpacing: Kirigami.Units.largeSpacing
+
+                PlasmaComponents3.Label {
+                    text: i18n("Speed:")
+                    color: Kirigami.Theme.disabledTextColor
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    visible: root.isConnected
+                }
+                PlasmaComponents3.Label {
+                    text: i18nc("Download and upload rates in some unit per second", "↓ %1/s, ↑ %2/s",
+                        KCoreAddons.Format.formatByteSize(root.itemData.rx_speed || 0),
+                        KCoreAddons.Format.formatByteSize(root.itemData.tx_speed || 0))
+                    font.family: "monospace"
+                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    visible: root.isConnected
+                }
 
                 PlasmaComponents3.Label {
                     text: i18n("IPv4:")
