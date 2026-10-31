@@ -201,6 +201,7 @@ PlasmoidItem {
     }
 
     Component.onCompleted: {
+        Plasmoid.status = PlasmaCore.Types.ActiveStatus;
         refreshStatus();
     }
 }

@@ -6,7 +6,7 @@
                 "Name": "KDE Community & Networkd Widget Contributors"
             }
         ],
-        "Category": "Network and Connectivity",
+        "Category": "Hardware",
         "Description": "Network management widget powered by systemd-networkd, iwd and resolvectl (plasma-nm replacement)",
         "Description[tr]": "systemd-networkd, iwd ve resolvectl tabanlı ağ yönetimi aracı (plasma-nm alternatifi)",
         "Icon": "network-wired",
@@ -17,5 +17,7 @@
         "Version": "1.1.0",
         "Website": "https://github.com/systemd-networkd-plasma"
     },
-    "X-Plasma-API-Minimum-Version": "6.0"
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "X-Plasma-NotificationArea": "true",
+    "X-Plasma-NotificationAreaCategory": "Hardware"
 }

@@ -8,6 +8,9 @@ Item {
 
     property PlasmoidItem plasmoidItem: null
 
+    Layout.minimumWidth: Kirigami.Units.iconSizes.small
+    Layout.minimumHeight: Kirigami.Units.iconSizes.small
+
     readonly property var backendData: (plasmoidItem && plasmoidItem.backendData) ? plasmoidItem.backendData : ({})
     readonly property bool isOnline: backendData.online || false
     readonly property string activeLink: backendData.active_link || ""
