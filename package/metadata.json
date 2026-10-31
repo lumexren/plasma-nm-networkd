@@ -3,7 +3,7 @@
     "KPlugin": {
         "Authors": [
             {
-                "Name": "KDE Community & Networkd Contributors"
+                "Name": "lumexren"
             }
         ],
         "Category": "Hardware",
@@ -15,7 +15,7 @@
         "Name": "Networks",
         "Name[tr]": "Ağlar",
         "Version": "6.8.2",
-        "Website": "https://github.com/systemd-networkd-plasma"
+        "Website": "https://codeberg.org/lumexren/plasma-nm-networkd"
     },
     "X-Plasma-API-Minimum-Version": "6.0",
     "X-Plasma-NotificationArea": "true",

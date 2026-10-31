@@ -1,10 +1,16 @@
 {
     "KPlugin": {
+        "Authors": [
+            {
+                "Name": "lumexren"
+            }
+        ],
         "Description": "Manage and configure network connections",
         "Description[tr]": "Ağ bağlantılarını yönetin ve yapılandırın",
         "Icon": "preferences-system-network",
         "Name": "Wi-Fi & Networking",
-        "Name[tr]": "Wi-Fi ve Ağ"
+        "Name[tr]": "Wi-Fi ve Ağ",
+        "Website": "https://codeberg.org/lumexren/plasma-nm-networkd"
     },
     "X-KDE-ParentApp": "kcontrol",
     "X-KDE-System-Settings-Parent-Category": "networksettings",
