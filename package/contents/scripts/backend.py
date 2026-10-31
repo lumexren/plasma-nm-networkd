@@ -20,6 +20,22 @@ def run_cmd(cmd_list, timeout=10):
     except Exception as e:
         return -1, "", str(e)
 
+def get_link_traffic(name):
+    rx = 0
+    tx = 0
+    try:
+        rx_path = f"/sys/class/net/{name}/statistics/rx_bytes"
+        tx_path = f"/sys/class/net/{name}/statistics/tx_bytes"
+        if os.path.exists(rx_path):
+            with open(rx_path, "r") as f:
+                rx = int(f.read().strip())
+        if os.path.exists(tx_path):
+            with open(tx_path, "r") as f:
+                tx = int(f.read().strip())
+    except Exception:
+        pass
+    return rx, tx
+
 def detect_backend():
     # 1. Check NetworkManager
     code_nm, out_nm, _ = run_cmd(["systemctl", "is-active", "NetworkManager"])
@@ -44,7 +60,6 @@ def detect_backend():
 # ==========================================
 
 def nm_get_status():
-    # Check general status
     code_gen, out_gen, _ = run_cmd(["nmcli", "-t", "-f", "STATE,CONNECTIVITY,WIFI", "general"])
     is_online = False
     wifi_hw_enabled = True
@@ -56,7 +71,6 @@ def nm_get_status():
         is_online = (state in ("connected", "connected (global)", "connected (site only)"))
         wifi_hw_enabled = (wifi_state.lower() == "enabled")
 
-    # Get device list
     code_dev, out_dev, _ = run_cmd(["nmcli", "-t", "-f", "DEVICE,TYPE,STATE,CONNECTION", "device"])
     links = []
     active_link = None
@@ -74,7 +88,6 @@ def nm_get_status():
             if dev == "lo":
                 continue
 
-            # Standardize type
             link_type = "ether"
             if dev_type in ("wifi", "wlan"):
                 link_type = "wlan"
@@ -90,7 +103,6 @@ def nm_get_status():
             if is_connected and not active_link:
                 active_link = dev
 
-            # Get IP and details for device
             ipv4_list = []
             ipv6_list = []
             gateway = ""
@@ -118,6 +130,8 @@ def nm_get_status():
                         try: mtu = int(s_line.partition(":")[2].strip())
                         except: pass
 
+            rx_b, tx_b = get_link_traffic(dev)
+
             links.append({
                 "name": dev,
                 "type": link_type,
@@ -127,15 +141,15 @@ def nm_get_status():
                 "connection_name": conn_name,
                 "mac": mac,
                 "mtu": mtu,
+                "rx_bytes": rx_b,
+                "tx_bytes": tx_b,
                 "ipv4": ipv4_list,
                 "ipv6": ipv6_list,
                 "gateway": gateway,
                 "dns": dns_list
             })
 
-    # Wi-Fi availability check
     wifi_usable = has_wifi_hardware and wifi_hw_enabled
-    # Verify rfkill
     if wifi_usable:
         code_rf, out_rf, _ = run_cmd(["rfkill", "list", "wifi"])
         if "Soft blocked: yes" in out_rf or "Hard blocked: yes" in out_rf:
@@ -324,6 +338,8 @@ def netd_get_status():
         elif net_op_state in ("routable", "configured") or (is_up and is_carrier and ipv4_addrs):
             status_label = "routable"
 
+        rx_b, tx_b = get_link_traffic(name)
+
         links.append({
             "name": name,
             "type": link_type,
@@ -332,6 +348,8 @@ def netd_get_status():
             "state": status_label,
             "mac": mac,
             "mtu": mtu,
+            "rx_bytes": rx_b,
+            "tx_bytes": tx_b,
             "ipv4": ipv4_addrs,
             "ipv6": ipv6_addrs,
             "gateway": default_gateways.get(name, ""),
@@ -479,6 +497,15 @@ def netd_link_action(action, link_name):
 # Dispatcher / Main Entry
 # ==========================================
 
+def open_settings():
+    if shutil.which("kcmshell6"):
+        subprocess.Popen(["kcmshell6", "kcm_network"])
+        return {"success": True}
+    elif shutil.which("systemsettings"):
+        subprocess.Popen(["systemsettings", "kcm_network"])
+        return {"success": True}
+    return {"success": False, "error": "Settings app not found"}
+
 def main():
     backend = detect_backend()
 
@@ -511,6 +538,8 @@ def main():
         link_name = sys.argv[3]
         res = nm_link_action(action, link_name) if backend == "NetworkManager" else netd_link_action(action, link_name)
         print(json.dumps(res))
+    elif cmd == "open_settings":
+        print(json.dumps(open_settings()))
     elif cmd == "flush_dns":
         code, out, err = run_cmd(["resolvectl", "flush-caches"])
         if code != 0:

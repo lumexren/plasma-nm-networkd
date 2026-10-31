@@ -49,7 +49,9 @@ Item {
                     gateway: l.gateway,
                     dns: l.dns,
                     mac: l.mac,
-                    mtu: l.mtu
+                    mtu: l.mtu,
+                    rx_bytes: l.rx_bytes || 0,
+                    tx_bytes: l.tx_bytes || 0
                 });
             }
         }
@@ -139,6 +141,11 @@ Item {
                     root.plasmoidItem.flushDns();
                 }
             }
+            onConfigureRequested: {
+                if (root.plasmoidItem) {
+                    root.plasmoidItem.openSettings();
+                }
+            }
         }
 
         // Inline Notification Banner
@@ -200,6 +207,9 @@ Item {
                     }
                     onActionRequested: (action, name) => {
                         if (root.plasmoidItem) root.plasmoidItem.executeLinkAction(action, name);
+                    }
+                    onConfigureRequested: {
+                        if (root.plasmoidItem) root.plasmoidItem.openSettings();
                     }
                 }
 

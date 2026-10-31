@@ -2,6 +2,8 @@ import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls as QQC2
 import org.kde.kirigami as Kirigami
+import org.kde.coreaddons as KCoreAddons
+import org.kde.kquickcontrolsaddons as KQuickControlsAddons
 import org.kde.plasma.components as PlasmaComponents3
 import org.kde.plasma.extras as PlasmaExtras
 
@@ -12,16 +14,53 @@ PlasmaExtras.ExpandableListItem {
     signal connectRequested(string type, string name, string password)
     signal disconnectRequested(string type, string name)
     signal actionRequested(string action, string name)
+    signal configureRequested()
 
     readonly property bool isConnected: itemData.isConnected || false
     readonly property bool isWifi: itemData.type === "wifi"
     readonly property bool isSecured: Boolean(itemData.security && itemData.security !== "open" && itemData.security !== "none")
 
+    property real rxSpeed: 0
+    property real txSpeed: 0
+    property double prevRxBytes: 0
+    property double prevTxBytes: 0
+    property double lastBytesTimestamp: 0
+
+    onItemDataChanged: {
+        if (isConnected && itemData.rx_bytes !== undefined && itemData.tx_bytes !== undefined) {
+            const now = Date.now();
+            if (prevRxBytes > 0 && lastBytesTimestamp > 0 && now > lastBytesTimestamp) {
+                const dt = (now - lastBytesTimestamp) / 1000.0;
+                if (dt > 0.5) {
+                    const deltaRx = Math.max(0, itemData.rx_bytes - prevRxBytes);
+                    const deltaTx = Math.max(0, itemData.tx_bytes - prevTxBytes);
+                    rxSpeed = deltaRx / dt;
+                    txSpeed = deltaTx / dt;
+                }
+            }
+            prevRxBytes = itemData.rx_bytes;
+            prevTxBytes = itemData.tx_bytes;
+            lastBytesTimestamp = now;
+        }
+    }
+
     icon: itemData.icon || (isWifi ? "network-wireless" : "network-wired")
     title: itemData.title || ""
     subtitle: {
         if (isConnected) {
-            return itemData.ip ? (i18n("Connected") + ", " + itemData.ip) : i18n("Connected");
+            const speedStr = (rxSpeed > 0 || txSpeed > 0)
+                ? i18nc("Download and upload rates in some unit per second", "↓ %1/s, ↑ %2/s",
+                    KCoreAddons.Format.formatByteSize(rxSpeed),
+                    KCoreAddons.Format.formatByteSize(txSpeed))
+                : "";
+            if (itemData.ip && speedStr) {
+                return itemData.ip + " • " + speedStr;
+            } else if (itemData.ip) {
+                return itemData.ip;
+            } else if (speedStr) {
+                return speedStr;
+            }
+            return i18n("Connected");
         }
         if (isWifi) {
             const secStr = isSecured ? itemData.security.toUpperCase() : i18n("Open");
@@ -29,6 +68,14 @@ PlasmaExtras.ExpandableListItem {
         }
         return itemData.statusText || "";
     }
+
+    contextualActions: [
+        QQC2.Action {
+            text: i18n("Configure…")
+            icon.name: "configure"
+            onTriggered: root.configureRequested()
+        }
+    ]
 
     // Default right action button (matches native plasma-nm)
     defaultActionButtonAction: QQC2.Action {
@@ -54,6 +101,10 @@ PlasmaExtras.ExpandableListItem {
     customExpandedViewContent: Component {
         ColumnLayout {
             spacing: Kirigami.Units.smallSpacing
+
+            KQuickControlsAddons.Clipboard {
+                id: clipboard
+            }
 
             // If it's a Wi-Fi network not yet connected: show inline password prompt
             RowLayout {
@@ -105,11 +156,22 @@ PlasmaExtras.ExpandableListItem {
                     font.pointSize: Kirigami.Theme.smallFont.pointSize
                     visible: Boolean(root.itemData.ip)
                 }
-                PlasmaComponents3.Label {
-                    text: root.itemData.ip || ""
-                    font.family: "monospace"
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                RowLayout {
+                    spacing: Kirigami.Units.smallSpacing
                     visible: Boolean(root.itemData.ip)
+                    PlasmaComponents3.Label {
+                        text: root.itemData.ip || ""
+                        font.family: "monospace"
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    }
+                    PlasmaComponents3.ToolButton {
+                        icon.name: "edit-copy"
+                        display: PlasmaComponents3.AbstractButton.IconOnly
+                        implicitHeight: Kirigami.Units.gridUnit
+                        implicitWidth: Kirigami.Units.gridUnit
+                        PlasmaComponents3.ToolTip { text: i18n("Copy to clipboard") }
+                        onClicked: clipboard.content = root.itemData.ip
+                    }
                 }
 
                 PlasmaComponents3.Label {
@@ -118,11 +180,22 @@ PlasmaExtras.ExpandableListItem {
                     font.pointSize: Kirigami.Theme.smallFont.pointSize
                     visible: Boolean(root.itemData.gateway)
                 }
-                PlasmaComponents3.Label {
-                    text: root.itemData.gateway || ""
-                    font.family: "monospace"
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                RowLayout {
+                    spacing: Kirigami.Units.smallSpacing
                     visible: Boolean(root.itemData.gateway)
+                    PlasmaComponents3.Label {
+                        text: root.itemData.gateway || ""
+                        font.family: "monospace"
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    }
+                    PlasmaComponents3.ToolButton {
+                        icon.name: "edit-copy"
+                        display: PlasmaComponents3.AbstractButton.IconOnly
+                        implicitHeight: Kirigami.Units.gridUnit
+                        implicitWidth: Kirigami.Units.gridUnit
+                        PlasmaComponents3.ToolTip { text: i18n("Copy to clipboard") }
+                        onClicked: clipboard.content = root.itemData.gateway
+                    }
                 }
 
                 PlasmaComponents3.Label {
@@ -131,11 +204,22 @@ PlasmaExtras.ExpandableListItem {
                     font.pointSize: Kirigami.Theme.smallFont.pointSize
                     visible: Boolean(root.itemData.dns && root.itemData.dns.length > 0)
                 }
-                PlasmaComponents3.Label {
-                    text: (root.itemData.dns && root.itemData.dns.join(", ")) || ""
-                    font.family: "monospace"
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                RowLayout {
+                    spacing: Kirigami.Units.smallSpacing
                     visible: Boolean(root.itemData.dns && root.itemData.dns.length > 0)
+                    PlasmaComponents3.Label {
+                        text: (root.itemData.dns && root.itemData.dns.join(", ")) || ""
+                        font.family: "monospace"
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    }
+                    PlasmaComponents3.ToolButton {
+                        icon.name: "edit-copy"
+                        display: PlasmaComponents3.AbstractButton.IconOnly
+                        implicitHeight: Kirigami.Units.gridUnit
+                        implicitWidth: Kirigami.Units.gridUnit
+                        PlasmaComponents3.ToolTip { text: i18n("Copy to clipboard") }
+                        onClicked: clipboard.content = (root.itemData.dns && root.itemData.dns.join(", ")) || ""
+                    }
                 }
 
                 PlasmaComponents3.Label {
@@ -144,11 +228,22 @@ PlasmaExtras.ExpandableListItem {
                     font.pointSize: Kirigami.Theme.smallFont.pointSize
                     visible: Boolean(root.itemData.mac)
                 }
-                PlasmaComponents3.Label {
-                    text: root.itemData.mac || ""
-                    font.family: "monospace"
-                    font.pointSize: Kirigami.Theme.smallFont.pointSize
+                RowLayout {
+                    spacing: Kirigami.Units.smallSpacing
                     visible: Boolean(root.itemData.mac)
+                    PlasmaComponents3.Label {
+                        text: root.itemData.mac || ""
+                        font.family: "monospace"
+                        font.pointSize: Kirigami.Theme.smallFont.pointSize
+                    }
+                    PlasmaComponents3.ToolButton {
+                        icon.name: "edit-copy"
+                        display: PlasmaComponents3.AbstractButton.IconOnly
+                        implicitHeight: Kirigami.Units.gridUnit
+                        implicitWidth: Kirigami.Units.gridUnit
+                        PlasmaComponents3.ToolTip { text: i18n("Copy to clipboard") }
+                        onClicked: clipboard.content = root.itemData.mac
+                    }
                 }
             }
 

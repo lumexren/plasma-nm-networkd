@@ -14,6 +14,7 @@ RowLayout {
     signal toggleWifi(bool enabled)
     signal refreshRequested()
     signal flushDnsRequested()
+    signal configureRequested()
 
     spacing: Kirigami.Units.smallSpacing
 
@@ -50,5 +51,14 @@ RowLayout {
         display: PlasmaComponents3.AbstractButton.IconOnly
         PlasmaComponents3.ToolTip { text: i18n("Flush DNS Cache") }
         onClicked: root.flushDnsRequested()
+    }
+
+    // Configure network connections button (matches native plasma-nm)
+    PlasmaComponents3.ToolButton {
+        id: openEditorButton
+        icon.name: "configure"
+        display: PlasmaComponents3.AbstractButton.IconOnly
+        PlasmaComponents3.ToolTip { text: i18n("Configure network connections…") }
+        onClicked: root.configureRequested()
     }
 }

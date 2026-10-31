@@ -1,9 +1,9 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: plasma_applet_org.kde.plasma.networkd 1.1.0\n"
+"Project-Id-Version: plasma_applet_org.kde.plasma.networkmanagement 6.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-31 20:00+0300\n"
-"PO-Revision-Date: 2026-10-31 20:00+0300\n"
+"POT-Creation-Date: 2026-10-31 20:40+0300\n"
+"PO-Revision-Date: 2026-10-31 20:40+0300\n"
 "Last-Translator: Antigravity\n"
 "Language-Team: Turkish\n"
 "Language: tr\n"
@@ -35,6 +35,19 @@ msgstr "Bağlan"
 
 msgid "Disconnect"
 msgstr "Bağlantıyı Kes"
+
+msgid "Configure…"
+msgstr "Yapılandır…"
+
+msgid "Configure network connections…"
+msgstr "Ağ bağlantılarını yapılandır…"
+
+msgid "Copy to clipboard"
+msgstr "Panoya kopyala"
+
+msgctxt "Download and upload rates in some unit per second"
+msgid "↓ %1/s, ↑ %2/s"
+msgstr "↓ %1/sn, ↑ %2/sn"
 
 msgid "Search…"
 msgstr "Ara…"

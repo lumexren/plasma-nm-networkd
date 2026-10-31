@@ -146,9 +146,15 @@ PlasmoidItem {
         }
     }
 
+    onExpandedChanged: () => {
+        if (root.expanded) {
+            root.refreshStatus();
+        }
+    }
+
     Timer {
         id: pollTimer
-        interval: 3500
+        interval: root.expanded ? 2000 : 12000
         running: true
         repeat: true
         triggeredOnStart: true
@@ -207,6 +213,10 @@ PlasmoidItem {
     function flushDns() {
         showBanner(i18n("Flushing DNS resolver cache…"), false);
         runBackendCmd("flush_dns");
+    }
+
+    function openSettings() {
+        runBackendCmd("open_settings");
     }
 
     Component.onCompleted: {
