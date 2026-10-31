@@ -1,0 +1,24 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "KDE Community & Networkd Widget Contributors"
+            }
+        ],
+        "Category": "Network and Connectivity",
+        "Description": "Network management widget powered by systemd-networkd, iwd and resolvectl",
+        "Description[tr]": "systemd-networkd, iwd ve resolvectl tabanlı ağ yönetimi aracı",
+        "Icon": "network-wired",
+        "Id": "org.kde.plasma.networkd",
+        "License": "GPL-3.0+",
+        "Name": "Networkd Connections",
+        "Name[tr]": "Networkd Ağ Bağlantıları",
+        "Version": "1.0.0",
+        "Website": "https://github.com/systemd-networkd-plasma"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "X-Plasma-Provides": [
+        "org.kde.plasma.networkmanagement"
+    ]
+}
