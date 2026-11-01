@@ -15,7 +15,7 @@
         "Name": "Networks",
         "Name[tr]": "Ağlar",
         "Version": "6.8.2",
-        "Website": "https://codeberg.org/lumexren/plasma-nm-networkd"
+        "Website": "https://github.com/lumexren/plasma-nm-networkd"
     },
     "X-Plasma-API-Minimum-Version": "6.0",
     "X-Plasma-NotificationArea": "true",

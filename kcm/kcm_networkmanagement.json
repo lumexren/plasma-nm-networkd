@@ -10,7 +10,7 @@
         "Icon": "preferences-system-network",
         "Name": "Wi-Fi & Networking",
         "Name[tr]": "Wi-Fi ve Ağ",
-        "Website": "https://codeberg.org/lumexren/plasma-nm-networkd"
+        "Website": "https://github.com/lumexren/plasma-nm-networkd"
     },
     "X-KDE-ParentApp": "kcontrol",
     "X-KDE-System-Settings-Parent-Category": "networksettings",

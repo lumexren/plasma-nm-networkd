@@ -1,8 +1,8 @@
 ![plasma-nm-networkd](https://img.shields.io/badge/plasma--nm--networkd-gray?style=for-the-badge&logo=kde&logoColor=white) 
 ![License](https://img.shields.io/badge/License-GPL--3.0-orange?style=for-the-badge) 
-![Stars](https://img.shields.io/gitea/stars/lumexren/plasma-nm-networkd?gitea_url=https%3A%2F%2Fcodeberg.org&style=for-the-badge&color=DAA520)
-![Issues](https://img.shields.io/gitea/issues/open/lumexren/plasma-nm-networkd?gitea_url=https%3A%2F%2Fcodeberg.org&style=for-the-badge)
-![Last Commit](https://img.shields.io/gitea/last-commit/lumexren/plasma-nm-networkd?gitea_url=https%3A%2F%2Fcodeberg.org&style=for-the-badge&color=F7A41D)
+![Stars](https://img.shields.io/github/stars/lumexren/plasma-nm-networkd?style=for-the-badge&color=DAA520)
+![Issues](https://img.shields.io/github/issues/lumexren/plasma-nm-networkd?style=for-the-badge)
+![Last Commit](https://img.shields.io/github/last-commit/lumexren/plasma-nm-networkd?style=for-the-badge&color=F7A41D)
 <br>
 
 **A lightweight, drop-in replacement for KDE Plasma 6's plasma-nm powered by systemd-networkd & NetworkManager**
@@ -48,7 +48,7 @@ It provides both the native system tray applet and the native System Settings mo
 Clone the repository and build using `makepkg`:
 
 ```bash
-git clone https://codeberg.org/lumexren/plasma-nm-networkd.git -b 6.x
+git clone https://github.com/lumexren/plasma-nm-networkd.git -b 6.x
 cd plasma-nm-networkd
 makepkg -si
 ```

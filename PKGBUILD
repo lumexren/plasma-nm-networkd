@@ -1,10 +1,10 @@
-# Maintainer: lumexren <https://codeberg.org/lumexren>
+# Maintainer: lumexren <https://github.com/lumexren>
 pkgname=plasma-nm-networkd
 pkgver=6.8.2
 pkgrel=1
 pkgdesc="Plasma applet and System Settings module powered by systemd-networkd & NetworkManager, drop-in replacement for plasma-nm"
 arch=('x86_64')
-url="https://codeberg.org/lumexren/plasma-nm-networkd"
+url="https://github.com/lumexren/plasma-nm-networkd"
 license=('GPL-3.0-or-later')
 depends=(
     'libplasma'
