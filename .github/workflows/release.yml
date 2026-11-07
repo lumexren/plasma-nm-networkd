@@ -97,3 +97,17 @@ jobs:
           prerelease: false
           files: |
             ${{ needs.build.outputs.release_filename }}
+
+      - name: Update AUR Package
+        uses: docker://archlinux:latest
+        env:
+          EMAIL: ${{ secrets.EMAIL }}
+          AUR_SSH_KEY: ${{ secrets.AUR_SSH_KEY }}
+          VERSION: ${{ needs.build.outputs.version }}
+          RELEASE_FILENAME: ${{ needs.build.outputs.release_filename }}
+          REPO_URL: "https://github.com/${{ github.repository }}"
+          AUR_REPO: "plasma-nm-networkd"
+          GITHUB_WORKSPACE: ${{ github.workspace }}
+        with:
+          entrypoint: bash
+          args: .github/scripts/aur-release.sh
