@@ -8,7 +8,7 @@ echo "==> Building Arch Linux drop-in package..."
 cd "${SCRIPT_DIR}"
 makepkg -f --nodeps
 
-PKG_FILE=$(ls -t plasma-nm-networkd-*.pkg.tar.zst 2>/dev/null | head -n 1)
+PKG_FILE=$(ls -t plasma-nm-networkd-*.pkg.tar* 2>/dev/null | head -n 1)
 
 if [ -z "${PKG_FILE}" ]; then
     echo "Error: Package build failed."

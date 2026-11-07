@@ -11,7 +11,7 @@ echo "==> Building KCM Networkmanagement plugin..."
 
 /usr/lib/qt6/rcc -name kcm_networkmanagement kcm.qrc -o qrc_kcm.cpp
 
-g++ -fPIC -shared -O2 \
+g++ -fPIC -shared ${CXXFLAGS:--O2} \
     -I. \
     -I/usr/include/qt6 \
     -I/usr/include/qt6/QtCore \
@@ -25,6 +25,7 @@ g++ -fPIC -shared -O2 \
     -I/usr/include/KF6/KCoreAddons \
     -I/usr/include/KF6/KI18n \
     kcm.cpp qrc_kcm.cpp -o kcm_networkmanagement.so \
+    ${LDFLAGS} \
     -lQt6Core -lQt6Qml -lQt6Quick -lKF6KCMUtilsQuick -lKF6KCMUtilsCore -lKF6CoreAddons -lKF6I18n
 
 echo "==> Generating kcm_networkmanagement.desktop..."
